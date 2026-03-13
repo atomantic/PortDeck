@@ -1,0 +1,142 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - testflight
+      - 'release/**'
+
+env:
+  IPHONEOS_DEPLOYMENT_TARGET: ${{ vars.IPHONEOS_DEPLOYMENT_TARGET }}
+  TEAM_ID:                  ${{ secrets.TEAM_ID }}
+  APPSTORE_API_KEY_ID:      ${{ secrets.APPSTORE_API_KEY_ID }}
+  APPSTORE_ISSUER_ID:       ${{ secrets.APPSTORE_ISSUER_ID }}
+  APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+jobs:
+  ci:
+    runs-on: macos-latest
+    name: Build & Test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
+
+      - name: Install xcbeautify
+        run: |
+          brew install xcbeautify
+
+      - name: List available simulators and runtimes
+        run: |
+          echo "=== Available Runtimes ==="
+          xcrun simctl list runtimes
+          echo "=== Available Devices ==="
+          xcrun simctl list devices available
+
+      - name: Run unit tests
+        run: |
+          if xcrun simctl list devices available | grep -q "iPhone 16"; then
+            DESTINATION="platform=iOS Simulator,name=iPhone 16"
+          elif xcrun simctl list devices available | grep -q "iPhone 15"; then
+            DESTINATION="platform=iOS Simulator,name=iPhone 15"
+          else
+            DESTINATION="platform=iOS Simulator,name=iPhone 14"
+          fi
+
+          echo "Using destination: $DESTINATION"
+
+          xcodebuild test \
+            -project PortOS_Recall.xcodeproj \
+            -scheme PortOS_Recall \
+            -only-testing:PortOS_RecallTests \
+            -destination "$DESTINATION" \
+            -destination-timeout 60 \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            | xcbeautify
+
+  cd:
+    runs-on: macos-latest
+    name: Build and Deploy to TestFlight
+    needs: ci
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testflight' || startsWith(github.ref, 'refs/heads/release/'))
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-stable'
+
+      - name: Create ASC key file
+        run: |
+          cat > "$GITHUB_WORKSPACE/AuthKey.p8" <<EOF
+          ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          EOF
+          chmod 600 "$GITHUB_WORKSPACE/AuthKey.p8"
+
+      - name: Archive iOS App (unsigned)
+        run: |
+          if [ -n "$IPHONEOS_DEPLOYMENT_TARGET" ]; then
+            DEPLOYMENT_TARGET="IPHONEOS_DEPLOYMENT_TARGET=$IPHONEOS_DEPLOYMENT_TARGET"
+          else
+            DEPLOYMENT_TARGET=""
+          fi
+
+          xcodebuild \
+            -project PortOS_Recall.xcodeproj \
+            -scheme PortOS_Recall \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/PortOS_Recall.xcarchive \
+            $DEPLOYMENT_TARGET \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            archive
+
+      - name: Create exportOptions.plist
+        run: |
+          cat > exportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export .ipa (automatic signing)
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/PortOS_Recall.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath build/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$GITHUB_WORKSPACE/AuthKey.p8" \
+            -authenticationKeyID "${{ secrets.APPSTORE_API_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: 'build/export/PortOS_Recall.ipa'
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
