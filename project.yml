@@ -30,6 +30,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: PortOS_Recall/PortOS_Recall.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         DEVELOPMENT_ASSET_PATHS: "\"PortOS_Recall/Preview Content\""
         GENERATE_INFOPLIST_FILE: true
     scheme:
