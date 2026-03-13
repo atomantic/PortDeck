@@ -21,6 +21,7 @@
 		5556F703C1D9D69D464F80E5 /* PortOS_RecallApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C30666010D7EB31B53D70CD5 /* PortOS_RecallApp.swift */; };
 		55A10C2D892C5D901E32AECC /* AnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAA187529869E49EDE2E207 /* AnalysisService.swift */; };
 		593B41BAA995579FC1A01809 /* MemoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B57ADA3EB0303F909BB5A8 /* MemoryListView.swift */; };
+		5B8AAC1306A27B5179D3FA8A /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408FB40BCBABCC89E2DE7074 /* AppSettings.swift */; };
 		5E4C21300C9A7C15A7BC597B /* ProcessingPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC2997F6CADAFA6180908BE /* ProcessingPipeline.swift */; };
 		5E5AB6C7E53B098869C9A059 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BCAB8675623516FF23A352 /* Enums.swift */; };
 		61A8BB3DCFC2A97BC41C366A /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = E27696D9EECC27B42B1F2F69 /* Session.swift */; };
@@ -40,13 +41,16 @@
 		B1647320887CD8E8CA1C1755 /* ConfirmationDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A550973D7ACC1DE078B5AA0E /* ConfirmationDialog.swift */; };
 		C18A8D7CFBB499FEC002D1BC /* SessionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9BAA1385D6F99DCFEB1EDD /* SessionRowView.swift */; };
 		C53D4F5FEEABC5F2914F4A29 /* MemoryExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9769EF766125856B620939F6 /* MemoryExtractor.swift */; };
+		D4D678801F361854851AAE5E /* AudioPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7692B2B3EF5823C2416E3B0 /* AudioPlaybackView.swift */; };
 		D5A8610C3856712BD7AB556D /* Participant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34FACF3754C07A5F9FEB766A /* Participant.swift */; };
+		E0C4D5EE4114D410D19E0CC3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD54F5A4CB5729126E586BCA /* SettingsView.swift */; };
 		E501F1C4D8674389E1B37EDA /* AnalysisServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A88510B9F04B9E6CFAD2F8 /* AnalysisServiceTests.swift */; };
 		E8A8919D187A5E37FA3917F7 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19504F51094B4F26BFF5CF05 /* BackgroundTaskManager.swift */; };
 		EA624F8E4AA3C8DE13D5F712 /* AudioEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7E692BF7148CF6F90A5E3E /* AudioEncryption.swift */; };
 		EED99D5BDF518ABFC86C622E /* View+Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85885490B82FEE542BCCF3BD /* View+Toast.swift */; };
 		F5F532B1896591623873F684 /* RecordingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317F988D21269FBDAA1B05E /* RecordingIndicator.swift */; };
 		FE6B43652B43A7B62029EAB0 /* MemoryExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 036D064D2277ED792275D43D /* MemoryExtractorTests.swift */; };
+		FE8D77B7A4FD9E4254331F7A /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E9255FF1E1E25D49228AA2 /* AudioPlayer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +85,7 @@
 		33BB54BE67471874573A402F /* MemoryModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryModelTests.swift; sourceTree = "<group>"; };
 		34FACF3754C07A5F9FEB766A /* Participant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Participant.swift; sourceTree = "<group>"; };
 		37B32ED016204D3017A4DDF6 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		408FB40BCBABCC89E2DE7074 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		428A5BCA2A44E2820C7E35AB /* PortOS_RecallUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PortOS_RecallUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		431BC2ACA5F9F2E7A454FC56 /* PreviewAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PreviewAssets.xcassets; sourceTree = "<group>"; };
 		4B00D84D7251EC1C65F4F7B4 /* Routes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routes.swift; sourceTree = "<group>"; };
@@ -89,6 +94,7 @@
 		5EE2BA293F599FD69F725FE4 /* PortOS_Recall.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PortOS_Recall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B09334FE20278CE77EA851C /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		6E261AF9C28A3E22F0581A87 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
+		79E9255FF1E1E25D49228AA2 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		7AAA187529869E49EDE2E207 /* AnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisService.swift; sourceTree = "<group>"; };
 		85885490B82FEE542BCCF3BD /* View+Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Toast.swift"; sourceTree = "<group>"; };
 		869301B362058878833C5118 /* Color+Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Brand.swift"; sourceTree = "<group>"; };
@@ -101,6 +107,7 @@
 		AFDAA63ED020B963051D0BD6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B447B64CA27B9DC9B77662A8 /* RecallLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecallLogger.swift; sourceTree = "<group>"; };
 		BB9BAA1385D6F99DCFEB1EDD /* SessionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRowView.swift; sourceTree = "<group>"; };
+		BD54F5A4CB5729126E586BCA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C30666010D7EB31B53D70CD5 /* PortOS_RecallApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOS_RecallApp.swift; sourceTree = "<group>"; };
 		C3B57ADA3EB0303F909BB5A8 /* MemoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryListView.swift; sourceTree = "<group>"; };
 		C6BCAB8675623516FF23A352 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
@@ -110,6 +117,7 @@
 		D4E1A9A5577E8B20A5831A94 /* SessionModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModelTests.swift; sourceTree = "<group>"; };
 		E029E3BA951504BD42F13BC8 /* PortOS_Recall.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PortOS_Recall.entitlements; sourceTree = "<group>"; };
 		E27696D9EECC27B42B1F2F69 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		E7692B2B3EF5823C2416E3B0 /* AudioPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackView.swift; sourceTree = "<group>"; };
 		F19B17703DF9C947E3EDC32E /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		FA2DF897F7F99AB18B9A3135 /* PortOS_RecallTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PortOS_RecallTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE7E692BF7148CF6F90A5E3E /* AudioEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEncryption.swift; sourceTree = "<group>"; };
@@ -122,6 +130,7 @@
 				BF87BC2999267C07E862CA9D /* Components */,
 				8C70237B7B2873402ED2D558 /* Memories */,
 				DE4636CA37D3DEFF06FA989A /* Sessions */,
+				8465C6EDCD490032A52197E1 /* Settings */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -141,6 +150,7 @@
 		5675ACFF621323D5195C71E3 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				408FB40BCBABCC89E2DE7074 /* AppSettings.swift */,
 				C6BCAB8675623516FF23A352 /* Enums.swift */,
 				0A2727DCA275A1169752172C /* Memory.swift */,
 				34FACF3754C07A5F9FEB766A /* Participant.swift */,
@@ -173,6 +183,14 @@
 				709E4B70AA8E250F3154121E /* PortOS_RecallUITests */,
 				E4C961E85FDD2F13E2318FA2 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		8465C6EDCD490032A52197E1 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				BD54F5A4CB5729126E586BCA /* SettingsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		8C70237B7B2873402ED2D558 /* Memories */ = {
@@ -238,6 +256,7 @@
 		DE4636CA37D3DEFF06FA989A /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
+				E7692B2B3EF5823C2416E3B0 /* AudioPlaybackView.swift */,
 				6E261AF9C28A3E22F0581A87 /* RecordingView.swift */,
 				D45AC1853E7A6C6054A5E792 /* SessionDetailView.swift */,
 				296DCDC8F769B459D860CF20 /* SessionListView.swift */,
@@ -261,6 +280,7 @@
 			children = (
 				7AAA187529869E49EDE2E207 /* AnalysisService.swift */,
 				FE7E692BF7148CF6F90A5E3E /* AudioEncryption.swift */,
+				79E9255FF1E1E25D49228AA2 /* AudioPlayer.swift */,
 				6B09334FE20278CE77EA851C /* AudioRecorder.swift */,
 				19504F51094B4F26BFF5CF05 /* BackgroundTaskManager.swift */,
 				9769EF766125856B620939F6 /* MemoryExtractor.swift */,
@@ -408,8 +428,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				55A10C2D892C5D901E32AECC /* AnalysisService.swift in Sources */,
+				5B8AAC1306A27B5179D3FA8A /* AppSettings.swift in Sources */,
 				EA624F8E4AA3C8DE13D5F712 /* AudioEncryption.swift in Sources */,
 				105C295B33519562F9A9321E /* AudioLevelView.swift in Sources */,
+				D4D678801F361854851AAE5E /* AudioPlaybackView.swift in Sources */,
+				FE8D77B7A4FD9E4254331F7A /* AudioPlayer.swift in Sources */,
 				A3F155543B5C92354DEBABA2 /* AudioRecorder.swift in Sources */,
 				E8A8919D187A5E37FA3917F7 /* BackgroundTaskManager.swift in Sources */,
 				432AC0F9E176366DFED618F1 /* Color+Brand.swift in Sources */,
@@ -435,6 +458,7 @@
 				ACBC057AE45611386831B452 /* SessionDetailView.swift in Sources */,
 				7D1F6F6BEBB57DA94B059E26 /* SessionListView.swift in Sources */,
 				C18A8D7CFBB499FEC002D1BC /* SessionRowView.swift in Sources */,
+				E0C4D5EE4114D410D19E0CC3 /* SettingsView.swift in Sources */,
 				A304EC1CCC1CC5C6A5FBB286 /* TimeInterval+Formatting.swift in Sources */,
 				7EDA914DA09CA1ED85BDBA94 /* ToastModifier.swift in Sources */,
 				1B01470DF8F69B554C43D101 /* ToastView.swift in Sources */,

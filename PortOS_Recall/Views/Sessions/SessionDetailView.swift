@@ -27,6 +27,9 @@ struct SessionDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 headerSection(session)
+                if !session.audioPath.isEmpty {
+                    AudioPlaybackView(audioPath: session.audioPath)
+                }
                 segmentedContent(session)
             }
             .padding()

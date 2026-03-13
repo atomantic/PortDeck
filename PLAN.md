@@ -63,7 +63,15 @@
 - [x] AudioEncryptionTests
 - [x] UI Tests
 
+### Phase 9: Analysis Quality + Audio Playback + Settings ✅
+- [x] Topic extraction: filter by lexical class (nouns only), expanded stop words, minimum transcript length, frequency threshold
+- [x] Memory extraction: consolidated topics into single memory, deduplication, skip short transcripts, filter meta-bullets
+- [x] Audio playback: AudioPlayer service + playback controls in SessionDetailView
+- [x] Settings tab: audio retention policy (keep forever / delete after transcription / 7 days / 30 days)
+- [x] Speaker diarization: pitch-based speaker change detection via voiceAnalytics
+- [x] TranscriptionResult with speaker-labeled segments
+
 ## Verification
 - Build: `xcodebuild build` succeeds (iOS Simulator, iPhone 16)
-- Tests: 25/25 unit tests pass
+- Tests: 27/27 unit tests pass
 - Git: Initialized, all files staged

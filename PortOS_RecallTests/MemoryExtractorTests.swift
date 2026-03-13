@@ -17,7 +17,10 @@ final class MemoryExtractorTests: XCTestCase {
     }
 
     func testExtractMemoriesFromAnalysis() {
-        let session = Session(title: "Test Session")
+        let session = Session(
+            title: "Test Session",
+            transcript: "A productive meeting about design and budget with Alice and Bob discussing the roadmap."
+        )
         context.insert(session)
 
         let analysis = SessionAnalysis(
@@ -40,8 +43,11 @@ final class MemoryExtractorTests: XCTestCase {
         let people = memories.filter { $0.type == .person }
         XCTAssertEqual(people.count, 2)
 
+        // Topics are now consolidated into a single memory
         let topics = memories.filter { $0.type == .topic }
-        XCTAssertEqual(topics.count, 2)
+        XCTAssertEqual(topics.count, 1)
+        XCTAssertTrue(topics.first?.content.contains("Design") == true)
+        XCTAssertTrue(topics.first?.content.contains("Budget") == true)
 
         let facts = memories.filter { $0.type == .fact }
         XCTAssertEqual(facts.count, 2)
@@ -53,7 +59,10 @@ final class MemoryExtractorTests: XCTestCase {
     }
 
     func testExtractMemoriesConfidence() {
-        let session = Session(title: "Confidence Test")
+        let session = Session(
+            title: "Confidence Test",
+            transcript: "We need to do something about the current situation with PersonName involved."
+        )
         context.insert(session)
 
         let analysis = SessionAnalysis(
@@ -68,14 +77,17 @@ final class MemoryExtractorTests: XCTestCase {
         let memories = MemoryExtractor.extract(from: analysis, session: session, context: context)
 
         let actionItem = memories.first { $0.type == .actionItem }
-        XCTAssertEqual(actionItem?.confidence, 0.5) // NLP fallback confidence
+        XCTAssertEqual(actionItem?.confidence, 0.5)
 
         let person = memories.first { $0.type == .person }
-        XCTAssertEqual(person?.confidence, 0.7) // Entity confidence
+        XCTAssertEqual(person?.confidence, 0.7)
     }
 
     func testExtractEmptyAnalysis() {
-        let session = Session(title: "Empty")
+        let session = Session(
+            title: "Empty",
+            transcript: "This is a transcript that is long enough to pass the minimum length check."
+        )
         context.insert(session)
 
         let analysis = SessionAnalysis(
@@ -89,5 +101,50 @@ final class MemoryExtractorTests: XCTestCase {
 
         let memories = MemoryExtractor.extract(from: analysis, session: session, context: context)
         XCTAssertTrue(memories.isEmpty)
+    }
+
+    func testExtractSkipsShortTranscripts() {
+        let session = Session(title: "Short", transcript: "Too short")
+        context.insert(session)
+
+        let analysis = SessionAnalysis(
+            summary: "Short",
+            bulletPoints: ["A point"],
+            actionItems: ["Do thing"],
+            decisions: [],
+            entities: [],
+            topics: ["Topic"]
+        )
+
+        let memories = MemoryExtractor.extract(from: analysis, session: session, context: context)
+        XCTAssertTrue(memories.isEmpty)
+    }
+
+    func testExtractDeduplicatesContainedContent() {
+        let session = Session(
+            title: "Dedup Test",
+            transcript: "Alice mentioned the budget review and we discussed the roadmap for next quarter."
+        )
+        context.insert(session)
+
+        let analysis = SessionAnalysis(
+            summary: "Budget review discussion",
+            bulletPoints: [
+                "Participants/entities mentioned: Alice",
+                "Key topics: Budget, Roadmap",
+                "Alice mentioned the budget review"
+            ],
+            actionItems: [],
+            decisions: [],
+            entities: ["Alice"],
+            topics: ["Budget", "Roadmap"]
+        )
+
+        let memories = MemoryExtractor.extract(from: analysis, session: session, context: context)
+
+        // "Participants/entities mentioned:" and "Key topics:" bullets should be filtered out
+        let facts = memories.filter { $0.type == .fact }
+        XCTAssertEqual(facts.count, 1)
+        XCTAssertEqual(facts.first?.content, "Alice mentioned the budget review")
     }
 }

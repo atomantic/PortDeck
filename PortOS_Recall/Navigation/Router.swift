@@ -8,7 +8,7 @@ final class Router {
     var memoriesPath = NavigationPath()
 
     enum AppTab: String, CaseIterable {
-        case sessions, memories
+        case sessions, memories, settings
     }
 
     func navigate(to route: any Hashable, tab: AppTab? = nil) {
@@ -16,6 +16,7 @@ final class Router {
         switch selectedTab {
         case .sessions: sessionsPath.append(route)
         case .memories: memoriesPath.append(route)
+        case .settings: break
         }
     }
 
@@ -27,6 +28,7 @@ final class Router {
         switch tab ?? selectedTab {
         case .sessions: sessionsPath = NavigationPath()
         case .memories: memoriesPath = NavigationPath()
+        case .settings: break
         }
     }
 }

@@ -55,6 +55,12 @@ struct ContentView: View {
             }
             .tabItem { Label("Memories", systemImage: "brain.head.profile") }
             .tag(Router.AppTab.memories)
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem { Label("Settings", systemImage: "gear") }
+            .tag(Router.AppTab.settings)
         }
         .tint(.recallPrimary)
     }

@@ -8,9 +8,17 @@ enum ProcessingPipeline {
         // Step 1: Transcription
         if !session.isTranscribed, !session.audioPath.isEmpty {
             let audioURL = URL(fileURLWithPath: session.audioPath)
-            if let transcript = await TranscriptionService.transcribe(audioURL: audioURL) {
-                session.transcript = transcript
+            if let result = await TranscriptionService.transcribe(audioURL: audioURL) {
+                // Use speaker-labeled transcript when multiple speakers detected
+                session.transcript = result.formattedTranscript
                 session.isTranscribed = true
+
+                // Apply audio retention policy
+                if AppSettings.audioRetention == .deleteAfterTranscription {
+                    deleteAudio(at: session.audioPath)
+                    session.audioPath = ""
+                }
+
                 try? context.save()
                 RecallLogger.success("Transcription complete for: \(session.title)")
             } else {
@@ -40,6 +48,12 @@ enum ProcessingPipeline {
         }
 
         RecallLogger.success("Processing pipeline complete for: \(session.title)")
+    }
+
+    private static func deleteAudio(at path: String) {
+        let url = URL(fileURLWithPath: path)
+        try? FileManager.default.removeItem(at: url)
+        RecallLogger.info("Deleted audio per retention policy: \(url.lastPathComponent)")
     }
 }
 

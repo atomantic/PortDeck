@@ -11,6 +11,9 @@ struct SessionAnalysis {
 }
 
 enum AnalysisService {
+    /// Minimum word count for meaningful topic extraction
+    private static let minimumWordsForTopics = 15
+
     static func analyze(transcript: String) async -> SessionAnalysis {
         RecallLogger.analysis("Starting analysis of \(transcript.count) characters")
 
@@ -91,25 +94,20 @@ enum AnalysisService {
     }
 
     private static func extractActionItems(from sentences: [String]) -> [String] {
-        let patterns = [
+        filterByPatterns(sentences, patterns: [
             "\\b(will|should|need to|needs to|must|have to|has to|going to|TODO|todo|action item)\\b",
             "\\b(follow up|follow-up|assign|schedule|create|send|review|update|prepare|complete)\\b"
-        ]
-
-        return sentences.filter { sentence in
-            let lower = sentence.lowercased()
-            return patterns.contains { pattern in
-                lower.range(of: pattern, options: .regularExpression) != nil
-            }
-        }
+        ])
     }
 
     private static func extractDecisions(from sentences: [String]) -> [String] {
-        let patterns = [
+        filterByPatterns(sentences, patterns: [
             "\\b(decided|agreed|confirmed|approved|resolved|concluded|determined|chose|selected|went with)\\b"
-        ]
+        ])
+    }
 
-        return sentences.filter { sentence in
+    private static func filterByPatterns(_ sentences: [String], patterns: [String]) -> [String] {
+        sentences.filter { sentence in
             let lower = sentence.lowercased()
             return patterns.contains { pattern in
                 lower.range(of: pattern, options: .regularExpression) != nil
@@ -118,30 +116,54 @@ enum AnalysisService {
     }
 
     private static func extractTopics(from text: String) -> [String] {
-        let tagger = NLTagger(tagSchemes: [.lemma])
+        let wordCount = text.split(separator: " ").count
+        guard wordCount >= minimumWordsForTopics else {
+            RecallLogger.analysis("Transcript too short for topic extraction (\(wordCount) words)")
+            return []
+        }
+
+        let tagger = NLTagger(tagSchemes: [.lemma, .lexicalClass])
         tagger.string = text
 
-        var wordFrequency: [String: Int] = [:]
+        var nounFrequency: [String: Int] = [:]
         let options: NLTagger.Options = [.omitWhitespace, .omitPunctuation]
-        let stopWords: Set<String> = ["the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-                                       "have", "has", "had", "do", "does", "did", "will", "would", "could",
-                                       "should", "may", "might", "can", "shall", "i", "you", "he", "she",
-                                       "it", "we", "they", "me", "him", "her", "us", "them", "my", "your",
-                                       "his", "its", "our", "their", "this", "that", "these", "those",
-                                       "and", "or", "but", "if", "then", "so", "not", "no", "to", "of",
-                                       "in", "on", "at", "for", "with", "about", "from", "up", "out",
-                                       "just", "also", "very", "really", "like", "think", "know", "get",
-                                       "go", "say", "said", "one", "all", "what", "when", "how", "which"]
 
-        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lemma, options: options) { tag, range in
-            let word = (tag?.rawValue ?? String(text[range])).lowercased()
+        // Common filler/function words that slip through POS tagging
+        let stopWords: Set<String> = [
+            "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+            "have", "has", "had", "do", "does", "did", "will", "would", "could",
+            "should", "may", "might", "can", "shall", "i", "you", "he", "she",
+            "it", "we", "they", "me", "him", "her", "us", "them", "my", "your",
+            "his", "its", "our", "their", "this", "that", "these", "those",
+            "and", "or", "but", "if", "then", "so", "not", "no", "to", "of",
+            "in", "on", "at", "for", "with", "about", "from", "up", "out",
+            "just", "also", "very", "really", "like", "think", "know", "get",
+            "go", "say", "said", "one", "all", "what", "when", "how", "which",
+            "thing", "stuff", "gonna", "gotta", "wanna", "kinda", "sorta",
+            "actually", "basically", "literally", "probably", "maybe",
+            "something", "anything", "everything", "nothing", "someone",
+            "here", "there", "where", "well", "yeah", "okay", "right"
+        ]
+
+        // Only extract nouns — verbs/adverbs/adjectives are not useful topics
+        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, range in
+            guard let tag, tag == .noun else { return true }
+
+            // Get the lemma for this word position
+            let lemma = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue
+            let word = (lemma ?? String(text[range])).lowercased()
+
             if word.count > 3, !stopWords.contains(word) {
-                wordFrequency[word, default: 0] += 1
+                nounFrequency[word, default: 0] += 1
             }
             return true
         }
 
-        return wordFrequency
+        // Require at least 2 occurrences in longer transcripts to be a topic
+        let minFrequency = wordCount > 50 ? 2 : 1
+
+        return nounFrequency
+            .filter { $0.value >= minFrequency }
             .sorted { $0.value > $1.value }
             .prefix(5)
             .map { $0.key.capitalized }

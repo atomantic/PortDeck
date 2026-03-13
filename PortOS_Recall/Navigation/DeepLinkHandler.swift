@@ -15,6 +15,8 @@ struct DeepLinkHandler {
         case "record":
             router.switchTab(.sessions)
             router.navigate(to: SessionRoute.recording)
+        case "settings":
+            router.switchTab(.settings)
         default:
             RecallLogger.warning("Unknown deep link: \(url)")
         }
