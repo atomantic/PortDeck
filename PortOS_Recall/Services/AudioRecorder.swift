@@ -48,7 +48,7 @@ final class AudioRecorder {
         try? FileManager.default.createDirectory(at: sessionDir, withIntermediateDirectories: true)
 
         let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+        try? audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetoothA2DP])
         try? audioSession.setActive(true)
 
         audioEngine = AVAudioEngine()
