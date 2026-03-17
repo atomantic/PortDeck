@@ -602,6 +602,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"PortOS_Recall/Preview Content\"";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PortOS_Recall/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "PortOS Recall";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -708,6 +709,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"PortOS_Recall/Preview Content\"";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PortOS_Recall/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "PortOS Recall";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

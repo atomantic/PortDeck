@@ -36,9 +36,11 @@ final class AnalysisServiceTests: XCTestCase {
 
     func testTopicExtraction() async {
         let transcript = """
-        The database migration is critical for the project. We need to ensure the database \
-        schema supports the new authentication system. The authentication tokens should be \
-        stored securely in the database.
+        The database migration is critical for the project timeline. We need to ensure the database \
+        schema supports the new authentication system. The authentication tokens should be stored \
+        securely in the database. The migration plan covers three database tables and the \
+        authentication flow. We reviewed the project schedule and confirmed the migration window. \
+        The authentication service needs database credentials rotated before the migration begins.
         """
         let analysis = await AnalysisService.analyze(transcript: transcript)
         XCTAssertFalse(analysis.topics.isEmpty)

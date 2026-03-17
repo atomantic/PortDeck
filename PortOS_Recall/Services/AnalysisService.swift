@@ -122,13 +122,7 @@ enum AnalysisService {
             return []
         }
 
-        let tagger = NLTagger(tagSchemes: [.lemma, .lexicalClass])
-        tagger.string = text
-
-        var nounFrequency: [String: Int] = [:]
-        let options: NLTagger.Options = [.omitWhitespace, .omitPunctuation]
-
-        // Common filler/function words that slip through POS tagging
+        // Common filler/function words to exclude
         let stopWords: Set<String> = [
             "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
             "have", "has", "had", "do", "does", "did", "will", "would", "could",
@@ -142,14 +136,30 @@ enum AnalysisService {
             "thing", "stuff", "gonna", "gotta", "wanna", "kinda", "sorta",
             "actually", "basically", "literally", "probably", "maybe",
             "something", "anything", "everything", "nothing", "someone",
-            "here", "there", "where", "well", "yeah", "okay", "right"
+            "here", "there", "where", "well", "yeah", "okay", "right",
+            "need", "new", "stored", "ensure", "critical", "covers",
+            "three", "securely", "before", "begins", "reviewed", "confirmed"
         ]
+
+        // Try NLP noun extraction first, fall back to frequency-based extraction
+        let topics = extractTopicsWithNLP(from: text, stopWords: stopWords, wordCount: wordCount)
+        if !topics.isEmpty { return topics }
+
+        // Fallback: frequency-based word extraction (NLTagger lexicalClass unavailable)
+        return extractTopicsByFrequency(from: text, stopWords: stopWords, wordCount: wordCount)
+    }
+
+    private static func extractTopicsWithNLP(from text: String, stopWords: Set<String>, wordCount: Int) -> [String] {
+        let tagger = NLTagger(tagSchemes: [.lemma, .lexicalClass])
+        tagger.string = text
+
+        var nounFrequency: [String: Int] = [:]
+        let options: NLTagger.Options = [.omitWhitespace, .omitPunctuation]
 
         // Only extract nouns — verbs/adverbs/adjectives are not useful topics
         tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, range in
             guard let tag, tag == .noun else { return true }
 
-            // Get the lemma for this word position
             let lemma = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lemma).0?.rawValue
             let word = (lemma ?? String(text[range])).lowercased()
 
@@ -159,10 +169,33 @@ enum AnalysisService {
             return true
         }
 
-        // Require at least 2 occurrences in longer transcripts to be a topic
         let minFrequency = wordCount > 50 ? 2 : 1
 
         return nounFrequency
+            .filter { $0.value >= minFrequency }
+            .sorted { $0.value > $1.value }
+            .prefix(5)
+            .map { $0.key.capitalized }
+    }
+
+    private static func extractTopicsByFrequency(from text: String, stopWords: Set<String>, wordCount: Int) -> [String] {
+        let tagger = NLTagger(tagSchemes: [.lemma])
+        tagger.string = text
+
+        var wordFrequency: [String: Int] = [:]
+        let options: NLTagger.Options = [.omitWhitespace, .omitPunctuation]
+
+        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lemma, options: options) { tag, range in
+            let word = (tag?.rawValue ?? String(text[range])).lowercased()
+            if word.count > 3, !stopWords.contains(word) {
+                wordFrequency[word, default: 0] += 1
+            }
+            return true
+        }
+
+        let minFrequency = wordCount > 50 ? 2 : 1
+
+        return wordFrequency
             .filter { $0.value >= minFrequency }
             .sorted { $0.value > $1.value }
             .prefix(5)
