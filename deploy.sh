@@ -249,7 +249,11 @@ if $BUILD_IOS; then
     echo "🚀 Uploading iOS to TestFlight..."
     IOS_UPLOAD_LOG="$BUILD_DIR/ios_upload.log"
     set +e
-    xcrun altool --upload-package "$IPA_PATH" \
+    # Xcode 26 resolves the App Store record reliably when the package is
+    # supplied through --file. The positional form can report that a valid
+    # bundle ID has no matching Apple ID.
+    xcrun altool --upload-package \
+        --file "$IPA_PATH" \
         --apiKey "$APPSTORE_API_KEY_ID" \
         --apiIssuer "$APPSTORE_ISSUER_ID" \
         2>&1 | tee "$IOS_UPLOAD_LOG"
@@ -304,7 +308,8 @@ if $BUILD_MACOS; then
     echo "🚀 Uploading macOS to TestFlight..."
     MACOS_UPLOAD_LOG="$BUILD_DIR/macos_upload.log"
     set +e
-    xcrun altool --upload-package "$PKG_PATH" \
+    xcrun altool --upload-package \
+        --file "$PKG_PATH" \
         --apiKey "$APPSTORE_API_KEY_ID" \
         --apiIssuer "$APPSTORE_ISSUER_ID" 2>&1 | tee "$MACOS_UPLOAD_LOG"
     MACOS_UPLOAD_STATUS=${PIPESTATUS[0]}
@@ -358,7 +363,8 @@ if $BUILD_WATCH; then
     echo "🚀 Uploading watchOS to TestFlight..."
     WATCH_UPLOAD_LOG="$BUILD_DIR/watch_upload.log"
     set +e
-    xcrun altool --upload-package "$WATCH_IPA" \
+    xcrun altool --upload-package \
+        --file "$WATCH_IPA" \
         --apiKey "$APPSTORE_API_KEY_ID" \
         --apiIssuer "$APPSTORE_ISSUER_ID" 2>&1 | tee "$WATCH_UPLOAD_LOG"
     WATCH_UPLOAD_STATUS=${PIPESTATUS[0]}
