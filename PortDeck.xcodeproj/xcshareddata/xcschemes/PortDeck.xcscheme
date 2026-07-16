@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "799DC9BDE4E1F9A7EA6B59F6"
-               BuildableName = "PortOS_Recall.app"
-               BlueprintName = "PortOS_Recall"
-               ReferencedContainer = "container:PortOS_Recall.xcodeproj">
+               BlueprintIdentifier = "E2F38E58A993B240A7284082"
+               BuildableName = "PortDeck.app"
+               BlueprintName = "PortDeck"
+               ReferencedContainer = "container:PortDeck.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "799DC9BDE4E1F9A7EA6B59F6"
-            BuildableName = "PortOS_Recall.app"
-            BlueprintName = "PortOS_Recall"
-            ReferencedContainer = "container:PortOS_Recall.xcodeproj">
+            BlueprintIdentifier = "E2F38E58A993B240A7284082"
+            BuildableName = "PortDeck.app"
+            BlueprintName = "PortDeck"
+            ReferencedContainer = "container:PortDeck.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -44,10 +44,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0C502170F1DD2D2C972A021F"
-               BuildableName = "PortOS_RecallTests.xctest"
-               BlueprintName = "PortOS_RecallTests"
-               ReferencedContainer = "container:PortOS_Recall.xcodeproj">
+               BlueprintIdentifier = "935B5D17196B87849584DE04"
+               BuildableName = "PortDeckTests.xctest"
+               BlueprintName = "PortDeckTests"
+               ReferencedContainer = "container:PortDeck.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -68,10 +68,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "799DC9BDE4E1F9A7EA6B59F6"
-            BuildableName = "PortOS_Recall.app"
-            BlueprintName = "PortOS_Recall"
-            ReferencedContainer = "container:PortOS_Recall.xcodeproj">
+            BlueprintIdentifier = "E2F38E58A993B240A7284082"
+            BuildableName = "PortDeck.app"
+            BlueprintName = "PortDeck"
+            ReferencedContainer = "container:PortDeck.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -87,10 +87,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "799DC9BDE4E1F9A7EA6B59F6"
-            BuildableName = "PortOS_Recall.app"
-            BlueprintName = "PortOS_Recall"
-            ReferencedContainer = "container:PortOS_Recall.xcodeproj">
+            BlueprintIdentifier = "E2F38E58A993B240A7284082"
+            BuildableName = "PortDeck.app"
+            BlueprintName = "PortDeck"
+            ReferencedContainer = "container:PortDeck.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

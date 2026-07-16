@@ -2,7 +2,7 @@ import Foundation
 
 struct DeepLinkHandler {
     static func handle(url: URL, router: Router) {
-        guard url.scheme == "portosrecall" else { return }
+        guard url.scheme == "portdeck" else { return }
 
         switch url.host {
         case "sessions":

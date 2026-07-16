@@ -1,77 +1,50 @@
-# PortOS Recall - Implementation Plan
+# PortDeck implementation plan
 
-## Status: In Progress
+## Status: Re-scoping
 
-## Phases
+PortDeck is the iOS companion for PortOS, as defined by [PortOS issue #2678](https://github.com/atomantic/PortOS/issues/2678). It is not a continuation of the previous session-recorder placeholder.
 
-### Phase 0: Project Init + CI/CD ✅
-- [x] Xcode project structure via XcodeGen
-- [x] Bundle ID: net.shadowpuppet.PortOSRecall
-- [x] Team: TYQ32QCF6K
-- [x] iOS 17.0 minimum
-- [x] CI/CD pipeline (.github/workflows/ci.yml)
-- [x] Info.plist with privacy keys
-- [x] Entitlements (audio, processing background modes)
+## Completed: product identity
 
-### Phase 1: Data Layer ✅
-- [x] Session model (SwiftData)
-- [x] Participant model
-- [x] Memory model
-- [x] Enums (SessionContext, MemoryType)
-- [x] PreviewSampleData
+- [x] Rename the Xcode project, targets, test bundles, source directories, and app entry point to `PortDeck`
+- [x] Set the application bundle ID to `net.shadowpuppet.PortDeck`
+- [x] Keep the App Store display name as `PortOS`
+- [x] Replace the placeholder URL scheme with `portdeck://`
+- [x] Update generated-project, CI, deployment, and documentation references
 
-### Phase 2: Navigation + Shell ✅
-- [x] Router (2 tabs: sessions, memories)
-- [x] Routes (SessionRoute, MemoryRoute)
-- [x] DeepLinkHandler (portosrecall://)
-- [x] RecallLogger
-- [x] App entry point (PortOS_RecallApp.swift)
+## Foundation
 
-### Phase 3: Audio Capture ✅
-- [x] AudioRecorder (@Observable, AVAudioEngine)
-- [x] AudioEncryption (AES-GCM, Keychain)
-- [x] 5-minute chunk rotation
+### Phase 1: Instance profiles
 
-### Phase 4: Transcription ✅
-- [x] TranscriptionService (SFSpeechRecognizer, on-device)
-- [x] Multi-chunk sequential transcription
+- [ ] SwiftData model for a PortOS instance: endpoint, instance ID, user label, health metadata, and connection state
+- [ ] Add/edit/remove instance flows
+- [ ] Pre-auth discovery using `GET /api/system/health`
 
-### Phase 5: Analysis + Memory Extraction ✅
-- [x] AnalysisService (NLP heuristics + Foundation Models stub)
-- [x] MemoryExtractor
+### Phase 2: Authentication and transport
 
-### Phase 6: UI ✅
-- [x] ToastView + ToastModifier
-- [x] ConfirmationDialog
-- [x] EmptyStateView
-- [x] RecordingIndicator + AudioLevelView
-- [x] SessionListView + SessionRowView
-- [x] SessionDetailView
-- [x] RecordingView
-- [x] MemoryListView + MemoryRowView
-- [x] Extensions (Color+Brand, Date+Formatting, etc.)
+- [ ] Per-instance password storage in the iOS Keychain
+- [ ] HTTP Basic authentication for password-protected instances
+- [ ] Support passwordless PortOS installations and HTTP/HTTPS endpoints on port 5555
+- [ ] Clear health, connection, and authentication error states
 
-### Phase 7: Background Pipeline ✅
-- [x] ProcessingPipeline
-- [x] BackgroundTaskManager
+### Phase 3: Instance management
 
-### Phase 8: Testing ✅
-- [x] SessionModelTests
-- [x] MemoryModelTests
-- [x] AnalysisServiceTests
-- [x] MemoryExtractorTests
-- [x] AudioEncryptionTests
-- [x] UI Tests
+- [ ] Read and update the local instance profile through `/api/instances/*`
+- [ ] Manage tailnet peers and their connection/sync state
+- [ ] Establish an accessible multi-instance home screen
 
-### Phase 9: Analysis Quality + Audio Playback + Settings ✅
-- [x] Topic extraction: filter by lexical class (nouns only), expanded stop words, minimum transcript length, frequency threshold
-- [x] Memory extraction: consolidated topics into single memory, deduplication, skip short transcripts, filter meta-bullets
-- [x] Audio playback: AudioPlayer service + playback controls in SessionDetailView
-- [x] Settings tab: audio retention policy (keep forever / delete after transcription / 7 days / 30 days)
-- [x] Speaker diarization: pitch-based speaker change detection via voiceAnalytics
-- [x] TranscriptionResult with speaker-labeled segments
+### Phase 4: Mobile actions
 
-## Verification
-- Build: `xcodebuild build` succeeds (iOS Simulator, iPhone 16)
-- Tests: 27/27 unit tests pass
-- Git: Initialized, all files staged
+- [ ] Load the native action surface from `GET /api/palette/manifest`
+- [ ] Dispatch palette-safe actions through `POST /api/palette/action/:id`
+- [ ] Add dictated daily logs and brain captures
+
+### Phase 5: MeatSpace POST companion features
+
+- [ ] Display POST configuration, recommendations, sessions, and progress
+- [ ] Record on-device training/testing progress
+- [ ] Reconcile progress through the PortOS iCloud JSON integration once its import endpoint exists
+
+## Upstream dependency
+
+The PortOS-side contract in issue #2678 provides the public pre-auth health additions (`name`, `authRequired`) and documents the supported native-client API. PortDeck should handle the current health payload gracefully until those additions land.

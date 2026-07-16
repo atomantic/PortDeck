@@ -1,6 +1,6 @@
 import XCTest
 
-final class PortOS_RecallUITests: XCTestCase {
+final class PortDeckUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false

@@ -3,7 +3,7 @@ import BackgroundTasks
 import SwiftData
 
 enum BackgroundTaskManager {
-    static let processingTaskIdentifier = "net.shadowpuppet.PortOSRecall.processing"
+    static let processingTaskIdentifier = "net.shadowpuppet.PortDeck.processing"
 
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: processingTaskIdentifier, using: nil) { task in

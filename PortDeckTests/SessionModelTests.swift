@@ -1,6 +1,6 @@
 import XCTest
 import SwiftData
-@testable import PortOS_Recall
+@testable import PortDeck
 
 final class SessionModelTests: XCTestCase {
     var container: ModelContainer!

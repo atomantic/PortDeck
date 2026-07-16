@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# PortOS Recall - Local TestFlight Deploy
+# PortDeck - Local TestFlight Deploy
 #
 # Usage: ./deploy.sh [--skip-tests] [--ios] [--macos] [--watch] [--all]
 #
@@ -37,16 +37,16 @@ if [ ! -f ~/.private_keys/"$KEY_FILENAME" ]; then
     echo "🔑 Symlinked API key to ~/.private_keys/"
 fi
 
-PROJECT="PortOS_Recall.xcodeproj"
+PROJECT="PortDeck.xcodeproj"
 BUILD_DIR="$SCRIPT_DIR/build"
 
 # Scheme names
-SCHEME_IOS="PortOS_Recall"
-SCHEME_MACOS="PortOS_Recall macOS"
-SCHEME_WATCH="PortOS_Recall watchOS"
-SCHEME_TEST="PortOS_Recall"
-TEST_BUNDLE="PortOS_RecallTests"
-APP_NAME="PortOS_Recall"
+SCHEME_IOS="PortDeck"
+SCHEME_MACOS="PortDeck macOS"
+SCHEME_WATCH="PortDeck watchOS"
+SCHEME_TEST="PortDeck"
+TEST_BUNDLE="PortDeckTests"
+APP_NAME="PortDeck"
 
 AVAILABLE_SCHEMES=$(xcodebuild -project "$PROJECT" -list 2>/dev/null || true)
 has_scheme() { echo "$AVAILABLE_SCHEMES" | grep -qxE "[[:space:]]*$1"; }

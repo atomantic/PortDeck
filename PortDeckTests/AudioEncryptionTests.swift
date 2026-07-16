@@ -1,5 +1,5 @@
 import XCTest
-@testable import PortOS_Recall
+@testable import PortDeck
 
 final class AudioEncryptionTests: XCTestCase {
 

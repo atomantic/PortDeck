@@ -2,7 +2,7 @@ import Foundation
 import os
 
 struct RecallLogger {
-    private static let logger = os.Logger(subsystem: "net.shadowpuppet.PortOSRecall", category: "general")
+    private static let logger = os.Logger(subsystem: "net.shadowpuppet.PortDeck", category: "general")
 
     static func recording(_ message: String) {
         logger.info("🎙️ \(message)")

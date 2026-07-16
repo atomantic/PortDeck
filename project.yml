@@ -1,4 +1,4 @@
-name: PortOS_Recall
+name: PortDeck
 options:
   bundleIdPrefix: net.shadowpuppet
   deploymentTarget:
@@ -14,58 +14,59 @@ settings:
     SWIFT_VERSION: "5.9"
 
 targets:
-  PortOS_Recall:
+  PortDeck:
     type: application
     platform: iOS
     sources:
-      - path: PortOS_Recall
+      - path: PortDeck
         excludes:
           - Preview Content/PreviewAssets.xcassets
-      - path: PortOS_Recall/Preview Content/PreviewAssets.xcassets
+      - path: PortDeck/Preview Content/PreviewAssets.xcassets
         buildPhase: none
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortOSRecall
-        INFOPLIST_FILE: PortOS_Recall/Info.plist
-        CODE_SIGN_ENTITLEMENTS: PortOS_Recall/PortOS_Recall.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortDeck
+        INFOPLIST_FILE: PortDeck/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PortDeck/PortDeck.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_CFBundleDisplayName: "PortOS Recall"
+        # PortDeck is the technical product name; the companion app is presented as PortOS.
+        INFOPLIST_KEY_CFBundleDisplayName: "PortOS"
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UILaunchScreen_Generation: true
-        DEVELOPMENT_ASSET_PATHS: "\"PortOS_Recall/Preview Content\""
+        DEVELOPMENT_ASSET_PATHS: "\"PortDeck/Preview Content\""
         GENERATE_INFOPLIST_FILE: true
     scheme:
       testTargets:
-        - PortOS_RecallTests
+        - PortDeckTests
       commandLineArguments:
         "-SeedSampleData":
           isEnabled: false
 
-  PortOS_RecallTests:
+  PortDeckTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: PortOS_RecallTests
+      - path: PortDeckTests
     dependencies:
-      - target: PortOS_Recall
+      - target: PortDeck
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortOSRecallTests
+        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortDeckTests
         GENERATE_INFOPLIST_FILE: true
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PortOS_Recall.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PortOS_Recall"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PortDeck.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PortDeck"
         BUNDLE_LOADER: "$(TEST_HOST)"
 
-  PortOS_RecallUITests:
+  PortDeckUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - path: PortOS_RecallUITests
+      - path: PortDeckUITests
     dependencies:
-      - target: PortOS_Recall
+      - target: PortDeck
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortOSRecallUITests
+        PRODUCT_BUNDLE_IDENTIFIER: net.shadowpuppet.PortDeckUITests
         GENERATE_INFOPLIST_FILE: true
-        TEST_TARGET_NAME: PortOS_Recall
+        TEST_TARGET_NAME: PortDeck

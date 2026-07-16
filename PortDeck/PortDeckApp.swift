@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct PortOS_RecallApp: App {
+struct PortDeckApp: App {
     @State private var router = Router()
 
     private var modelContainer: ModelContainer = {

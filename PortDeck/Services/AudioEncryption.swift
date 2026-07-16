@@ -3,7 +3,7 @@ import CryptoKit
 import Security
 
 enum AudioEncryption {
-    private static let keychainService = "net.shadowpuppet.PortOSRecall.audioKey"
+    private static let keychainService = "net.shadowpuppet.PortDeck.audioKey"
     private static let keychainAccount = "deviceEncryptionKey"
 
     static func encrypt(fileAt url: URL) -> URL? {

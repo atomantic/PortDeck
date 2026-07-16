@@ -1,6 +1,6 @@
 # PortDeck
 
-PortDeck is the iOS companion app for PortOS. `PortDeck` is the project and bundle identity; the App Store display name is `PortOS`.
+PortDeck is the iOS companion app for PortOS. `PortDeck` is the technical project and bundle identity; the App Store display name is `PortOS`.
 
 ## Tech stack
 
@@ -23,4 +23,4 @@ xcodebuild test -project PortDeck.xcodeproj -scheme PortDeck \
 
 ## Product scope
 
-The companion manages PortOS instances and later layers in daily-log dictation, brain entries, quick actions, and MeatSpace POST work. Use the native-client contract in PortOS issue #2678 as the integration reference. The legacy recording code is a temporary scaffold and should not drive new product work.
+Build the PortOS companion described in [issue #2678](https://github.com/atomantic/PortOS/issues/2678): multi-instance management first, followed by dictated daily logs, brain entries, palette-safe quick actions, and MeatSpace POST support. The recording implementation is a temporary legacy scaffold and does not define new product work.

@@ -1,48 +1,34 @@
-# PortOS Recall
+# PortDeck
 
 <p align="center">
-  <img src="PortOSRecall.png" width="200" alt="PortOS Recall App Icon" />
+  <img src="PortDeck.png" width="200" alt="PortDeck app icon" />
 </p>
 
-A privacy-first iOS app for user-initiated conversation recording, on-device transcription, summarization, and structured memory extraction.
+PortDeck is the iOS companion app for [PortOS](https://github.com/atomantic/PortOS). Its App Store display name is **PortOS**, while `PortDeck` is the product, target, and bundle identity used for development and distribution.
 
-PortOS Recall is **not** an always-listening system -- it's a session recorder you manually start for meetings, D&D sessions, and conversations.
+## Direction
 
-## Features
+PortDeck is being repurposed from a recording-app placeholder into the mobile companion described in [PortOS issue #2678](https://github.com/atomantic/PortOS/issues/2678). Its foundation is multi-instance management for PortOS installations reachable on a tailnet. Planned layers include:
 
-- **Session Recording** -- Start/stop audio capture with 5-minute auto-chunking for long sessions
-- **On-Device Transcription** -- Speech-to-text via `SFSpeechRecognizer` with `requiresOnDeviceRecognition` (no data leaves your device)
-- **NLP Analysis** -- Extracts summaries, bullet points, action items, decisions, and named entities using `NaturalLanguage` framework
-- **Structured Memories** -- Automatically creates typed memory objects (facts, decisions, action items, people, topics) from each session
-- **Audio Encryption** -- AES-GCM encryption via CryptoKit with per-device Keychain-stored keys
-- **Background Processing** -- Transcription and analysis continue via `BGProcessingTask` if the app is backgrounded
-- **Deep Linking** -- `portosrecall://` URL scheme for sessions, memories, and recording
+- Discovering, identifying, labeling, and managing PortOS instances
+- Secure per-instance authentication stored in the iOS Keychain
+- Dictated daily logs, brain captures, and other palette-safe quick actions
+- MeatSpace POST training and testing prompts
+- iCloud JSON reconciliation for shared progress
 
-## Architecture
+The existing recorder implementation is retained temporarily as a migration scaffold; it does not define PortDeck's product scope.
 
-- **SwiftUI** + **SwiftData** (iOS 17.0+)
-- **AVAudioEngine** for 16kHz mono AAC recording
-- **NaturalLanguage** framework (NLTagger, NLTokenizer) for entity/topic extraction
-- **Apple Foundation Models** stub for iOS 26+ (A17 Pro+) with NLP fallback
-- **XcodeGen** for project generation (`project.yml`)
+## Product identity
 
-## Project Structure
-
-```
-PortOS_Recall/
-  Models/          Session, Participant, Memory, Enums
-  Navigation/      Router, Routes, DeepLinkHandler
-  Services/        AudioRecorder, AudioEncryption, TranscriptionService,
-                   AnalysisService, MemoryExtractor, ProcessingPipeline,
-                   BackgroundTaskManager, RecallLogger
-  Views/
-    Sessions/      SessionListView, SessionDetailView, RecordingView
-    Memories/      MemoryListView, MemoryRowView
-    Components/    ToastView, EmptyStateView, RecordingIndicator, AudioLevelView
-  Extensions/      Color+Brand, Date+Formatting, TimeInterval+Formatting, View+Toast
-```
+- Xcode project and app target: `PortDeck`
+- Bundle ID: `net.shadowpuppet.PortDeck`
+- URL scheme: `portdeck://`
+- App Store display name: `PortOS`
+- Minimum deployment target: iOS 17.0
 
 ## Development
+
+`project.yml` is the source of truth for the generated Xcode project.
 
 ```bash
 # Generate Xcode project
@@ -51,24 +37,20 @@ xcodegen generate
 
 # Build
 xcodebuild build \
-  -project PortOS_Recall.xcodeproj \
-  -scheme PortOS_Recall \
+  -project PortDeck.xcodeproj \
+  -scheme PortDeck \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   CODE_SIGNING_ALLOWED=NO
 
 # Run tests
 xcodebuild test \
-  -project PortOS_Recall.xcodeproj \
-  -scheme PortOS_Recall \
-  -only-testing:PortOS_RecallTests \
+  -project PortDeck.xcodeproj \
+  -scheme PortDeck \
+  -only-testing:PortDeckTests \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-## CI/CD
+## Deployment
 
-GitHub Actions pipeline deploys to TestFlight on push to `main`, `testflight`, or `release/*` branches. See `.github/workflows/ci.yml`.
-
-## Privacy
-
-All processing happens on-device. No audio, transcripts, or memories leave the device. Audio files are encrypted at rest with AES-GCM using a per-device key stored in the Secure Enclave Keychain.
+`./deploy.sh` performs the local TestFlight workflow. It requires the App Store Connect credentials described in `.env.example`.
