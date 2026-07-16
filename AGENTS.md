@@ -19,7 +19,11 @@ xcodebuild build -project PortDeck.xcodeproj -scheme PortDeck \
 xcodebuild test -project PortDeck.xcodeproj -scheme PortDeck \
   -only-testing:PortDeckTests \
   -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+
+./take_screenshots.sh --iphone-only
 ```
+
+Use the `-demo-data` launch argument for a deterministic in-memory fleet with simulated API responses. `./take_screenshots.sh` enables it automatically.
 
 ## Product scope
 

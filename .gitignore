@@ -40,3 +40,7 @@ AuthKey*.p8
 
 # Environment
 .env
+
+# App Store screenshot output and transient test configuration
+screenshots/
+.screenshot_config.json

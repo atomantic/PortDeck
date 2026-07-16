@@ -24,11 +24,36 @@ else
     exit 1
 fi
 
-KEY_PATH="$APPSTORE_API_PRIVATE_KEY_PATH"
+KEY_PATH="${APPSTORE_API_PRIVATE_KEY_PATH/#\~/$HOME}"
 if [ ! -f "$KEY_PATH" ]; then
     echo "❌ API key not found at: $KEY_PATH"
     exit 1
 fi
+
+if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+    echo "❌ Working tree is not clean. Commit or stash changes before deploying."
+    exit 1
+fi
+
+# Strip alpha from app icons before archiving; App Store Connect rejects icons
+# with transparency. This mirrors the MortalLoom release preflight.
+python3 -c "
+from PIL import Image
+from pathlib import Path
+fixed = False
+for path in Path('PortDeck/Assets.xcassets/AppIcon.appiconset').glob('*.png'):
+    image = Image.open(path)
+    if image.mode == 'RGBA':
+        background = Image.new('RGB', image.size, (0, 0, 0))
+        background.paste(image, mask=image.split()[3])
+        background.save(path)
+        fixed = True
+    elif image.mode != 'RGB':
+        image.convert('RGB').save(path)
+        fixed = True
+if fixed:
+    print('🎨 Stripped alpha from app icons')
+"
 
 mkdir -p ~/.private_keys
 KEY_FILENAME="AuthKey_${APPSTORE_API_KEY_ID}.p8"
@@ -102,7 +127,7 @@ ORIG_PBXPROJ=$(mktemp)
 cp project.yml "$ORIG_PROJECT_YML"
 cp "$PROJECT/project.pbxproj" "$ORIG_PBXPROJ"
 
-CURRENT_BUILD=$(grep CURRENT_PROJECT_VERSION project.yml | head -1 | awk '{print $2}')
+CURRENT_BUILD=$(grep -m1 'CURRENT_PROJECT_VERSION:' project.yml | awk '{print $2}')
 NEW_BUILD=$((CURRENT_BUILD + 1))
 echo "📦 Build number: $CURRENT_BUILD → $NEW_BUILD"
 /usr/bin/sed -i '' "s/CURRENT_PROJECT_VERSION: ${CURRENT_BUILD}/CURRENT_PROJECT_VERSION: ${NEW_BUILD}/" project.yml
@@ -195,9 +220,10 @@ if $BUILD_IOS; then
         -configuration Release \
         -destination 'generic/platform=iOS' \
         -archivePath "$ARCHIVE_IOS" \
-        CODE_SIGNING_ALLOWED=NO \
-        CODE_SIGN_IDENTITY="" \
-        CODE_SIGNING_REQUIRED=NO \
+        -allowProvisioningUpdates \
+        -authenticationKeyPath "$KEY_PATH" \
+        -authenticationKeyID "$APPSTORE_API_KEY_ID" \
+        -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
         -quiet
     echo "✅ iOS archive complete"
 
@@ -212,9 +238,9 @@ if $BUILD_IOS; then
         -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
         -quiet
 
-    IPA_PATH="$EXPORT_IOS/${APP_NAME}.ipa"
-    if [ ! -f "$IPA_PATH" ]; then
-        echo "❌ iOS IPA not found at $IPA_PATH"
+    IPA_PATH=$(find "$EXPORT_IOS" -name '*.ipa' | head -1)
+    if [ -z "$IPA_PATH" ]; then
+        echo "❌ iOS IPA not found in $EXPORT_IOS"
         ls -la "$EXPORT_IOS/"
         exit 1
     fi
@@ -223,12 +249,10 @@ if $BUILD_IOS; then
     echo "🚀 Uploading iOS to TestFlight..."
     IOS_UPLOAD_LOG="$BUILD_DIR/ios_upload.log"
     set +e
-    xcrun altool --upload-app \
-        --file "$IPA_PATH" \
-        --type ios \
+    xcrun altool --upload-package "$IPA_PATH" \
         --apiKey "$APPSTORE_API_KEY_ID" \
         --apiIssuer "$APPSTORE_ISSUER_ID" \
-        --transport DAV 2>&1 | tee "$IOS_UPLOAD_LOG"
+        2>&1 | tee "$IOS_UPLOAD_LOG"
     IOS_UPLOAD_STATUS=${PIPESTATUS[0]}
     set -e
     if [ "$IOS_UPLOAD_STATUS" -ne 0 ] || grep -qE "$FAIL_MARKERS" "$IOS_UPLOAD_LOG"; then
@@ -280,9 +304,7 @@ if $BUILD_MACOS; then
     echo "🚀 Uploading macOS to TestFlight..."
     MACOS_UPLOAD_LOG="$BUILD_DIR/macos_upload.log"
     set +e
-    xcrun altool --upload-app \
-        --file "$PKG_PATH" \
-        --type macos \
+    xcrun altool --upload-package "$PKG_PATH" \
         --apiKey "$APPSTORE_API_KEY_ID" \
         --apiIssuer "$APPSTORE_ISSUER_ID" 2>&1 | tee "$MACOS_UPLOAD_LOG"
     MACOS_UPLOAD_STATUS=${PIPESTATUS[0]}
@@ -336,12 +358,9 @@ if $BUILD_WATCH; then
     echo "🚀 Uploading watchOS to TestFlight..."
     WATCH_UPLOAD_LOG="$BUILD_DIR/watch_upload.log"
     set +e
-    xcrun altool --upload-app \
-        --file "$WATCH_IPA" \
-        --type ios \
+    xcrun altool --upload-package "$WATCH_IPA" \
         --apiKey "$APPSTORE_API_KEY_ID" \
-        --apiIssuer "$APPSTORE_ISSUER_ID" \
-        --transport DAV 2>&1 | tee "$WATCH_UPLOAD_LOG"
+        --apiIssuer "$APPSTORE_ISSUER_ID" 2>&1 | tee "$WATCH_UPLOAD_LOG"
     WATCH_UPLOAD_STATUS=${PIPESTATUS[0]}
     set -e
     if [ "$WATCH_UPLOAD_STATUS" -ne 0 ] || grep -qE "$FAIL_MARKERS" "$WATCH_UPLOAD_LOG"; then
@@ -355,10 +374,13 @@ fi
 echo "✅ Build $NEW_BUILD submitted to TestFlight."
 echo "🔗 https://appstoreconnect.apple.com/teams/69a6de6e-c0f9-47e3-e053-5b8c7c11a4d1/apps/6760561316/testflight"
 
-git add project.yml "$PROJECT/project.pbxproj"
+git add project.yml "$PROJECT/project.pbxproj" PortDeck/Assets.xcassets/AppIcon.appiconset
 git commit -m "build: bump to build $NEW_BUILD"
 DEPLOY_SUCCESS=true
 echo "📝 Committed build number bump"
+git pull --rebase --autostash
+git push
+echo "📤 Pushed build number bump"
 
 rm -rf "$BUILD_DIR"
 echo "🧹 Cleaned build artifacts"

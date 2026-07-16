@@ -3,13 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>PortDeck needs microphone access to record sessions.</string>
+	<string>PortOS uses the microphone to dictate entries and, when explicitly enabled, send audio directly to your selected self-managed PortOS instance.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>PortDeck uses on-device speech recognition to transcribe recordings.</string>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>net.shadowpuppet.PortDeck.processing</string>
-	</array>
+	<string>PortOS uses on-device speech recognition to turn dictation into text before sending it to your PortOS instance.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>PortOS connects directly to the PortOS instances on your Tailscale network.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- PortOS supports user-configured HTTP endpoints on private Tailscale networks. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

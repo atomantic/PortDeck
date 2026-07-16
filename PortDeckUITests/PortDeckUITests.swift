@@ -1,54 +1,37 @@
 import XCTest
 
 final class PortDeckUITests: XCTestCase {
-
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
-    func testAppLaunches() throws {
+    func testNewCompanionShellLaunches() {
         let app = XCUIApplication()
-        app.launchArguments = ["-SeedSampleData"]
+        app.launchArguments = ["-UseInMemoryStore"]
         app.launch()
 
-        // Verify Sessions tab is visible
-        XCTAssertTrue(app.tabBars.buttons["Sessions"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Memories"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Fleet"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Capture"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Actions"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["PortOS Fleet"].exists)
+        XCTAssertTrue(app.buttons["Add an instance"].exists)
     }
 
-    func testSessionsTabDisplaysSessions() throws {
+    func testCaptureExplainsMissingInstance() {
         let app = XCUIApplication()
-        app.launchArguments = ["-SeedSampleData"]
+        app.launchArguments = ["-UseInMemoryStore"]
         app.launch()
+        app.tabBars.buttons["Capture"].tap()
 
-        // Sessions tab should be selected by default
-        XCTAssertTrue(app.tabBars.buttons["Sessions"].isSelected)
-
-        // Should show navigation title
-        XCTAssertTrue(app.navigationBars["Sessions"].exists)
+        XCTAssertTrue(app.navigationBars["Capture"].exists)
+        XCTAssertTrue(app.staticTexts["Add an instance first"].exists)
     }
 
-    func testSwitchToMemoriesTab() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-SeedSampleData"]
-        app.launch()
-
-        app.tabBars.buttons["Memories"].tap()
-        XCTAssertTrue(app.navigationBars["Memories"].exists)
-    }
-
-    func testRecordButtonExists() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-SeedSampleData"]
-        app.launch()
-
-        // Record button should be in the toolbar
-        XCTAssertTrue(app.buttons["Record"].exists)
-    }
-
-    func testLaunchPerformance() throws {
+    func testLaunchPerformance() {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             let app = XCUIApplication()
+            app.launchArguments = ["-UseInMemoryStore"]
             app.launch()
         }
     }

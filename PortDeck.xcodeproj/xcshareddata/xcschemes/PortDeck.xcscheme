@@ -50,6 +50,17 @@
                ReferencedContainer = "container:PortDeck.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3492868D52A8DDD97E135144"
+               BuildableName = "PortDeckUITests.xctest"
+               BlueprintName = "PortDeckUITests"
+               ReferencedContainer = "container:PortDeck.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

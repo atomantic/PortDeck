@@ -40,8 +40,9 @@ targets:
     scheme:
       testTargets:
         - PortDeckTests
+        - PortDeckUITests
       commandLineArguments:
-        "-SeedSampleData":
+        "-UseInMemoryStore":
           isEnabled: false
 
   PortDeckTests:
