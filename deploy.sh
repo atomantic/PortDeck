@@ -378,7 +378,7 @@ if $BUILD_WATCH; then
 fi
 
 echo "✅ Build $NEW_BUILD submitted to TestFlight."
-echo "🔗 https://appstoreconnect.apple.com/teams/69a6de6e-c0f9-47e3-e053-5b8c7c11a4d1/apps/6760561316/testflight"
+echo "🔗 https://appstoreconnect.apple.com/teams/69a6de6e-c0f9-47e3-e053-5b8c7c11a4d1/apps/6792223291/testflight"
 
 git add project.yml "$PROJECT/project.pbxproj" PortDeck/Assets.xcassets/AppIcon.appiconset
 git commit -m "build: bump to build $NEW_BUILD"
