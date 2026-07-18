@@ -21,6 +21,8 @@ Pods/
 # Misc
 *.moved-aside
 *.pbxuser
+__pycache__/
+*.pyc
 !default.pbxuser
 *.mode1v3
 !default.mode1v3
