@@ -24,4 +24,4 @@ A future opt-in feature may upload audio directly to a PortOS instance selected 
 
 ## Contact
 
-For support or privacy questions, open an issue at <https://github.com/atomantic/PortOS/issues>.
+For support or privacy questions, open an issue at <https://github.com/atomantic/PortDeck/issues>.

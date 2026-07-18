@@ -14,8 +14,8 @@ This file is the source copy for the English (U.S.) App Store listing for Apple 
 - Promotional text: `Connect every PortOS instance on your tailnet, capture ideas by voice or text, and run safe native actions—without a PortDeck-operated cloud.`
 - Keywords: `self-hosted,AI,Tailscale,server,fleet,automation,dictation,notes,privacy,homelab`
 - Marketing URL: `https://github.com/atomantic/PortOS`
-- Support URL: `https://github.com/atomantic/PortOS/issues`
-- Privacy policy URL: `https://gist.github.com/atomantic/490e5a1a2493b63c60b182df1e3b8f40`
+- Support URL: `https://github.com/atomantic/PortDeck/issues`
+- Privacy policy URL: `https://github.com/atomantic/PortDeck/blob/main/PRIVACY.md`
 - Copyright: `2026 ShadowPuppet, LLC`
 - Age rating: 4+ (with Apple's regional equivalents)
 - App privacy: Data Not Collected
