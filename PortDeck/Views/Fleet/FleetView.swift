@@ -7,6 +7,7 @@ struct FleetView: View {
     @Query(sort: \PortOSInstance.addedAt) private var instances: [PortOSInstance]
 
     @State private var showingAddInstance = false
+    @State private var showingDemo = false
     @State private var isRefreshing = false
     @State private var refreshError: String?
 
@@ -84,6 +85,7 @@ struct FleetView: View {
                 }
             }
             .sheet(isPresented: $showingAddInstance) { AddInstanceView() }
+            .fullScreenCover(isPresented: $showingDemo) { DemoExperienceView() }
             .refreshable { await refreshAll() }
             .task {
                 if appState.iCloudSyncEnabled {
@@ -137,9 +139,14 @@ struct FleetView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                Button("Add an instance") { showingAddInstance = true }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                VStack(spacing: 10) {
+                    Button("Add an instance") { showingAddInstance = true }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                    Button("Explore Demo") { showingDemo = true }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
@@ -180,6 +187,59 @@ struct FleetView: View {
         }
         do { try modelContext.save() }
         catch { refreshError = "Fleet status could not be saved: \(error.localizedDescription)" }
+    }
+}
+
+@MainActor
+private struct DemoExperienceView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var demoState: AppState
+    private let modelContainer: ModelContainer
+
+    init() {
+        do {
+            let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(for: PortOSInstance.self, configurations: configuration)
+            try DemoData.seed(modelContext: container.mainContext)
+
+            let suiteName = "net.shadowpuppet.PortDeck.review-demo"
+            let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+            defaults.removePersistentDomain(forName: suiteName)
+            let state = AppState(
+                api: PortOSAPIClient(transport: DemoHTTPTransport()),
+                credentials: DemoCredentialStore(),
+                fleetSyncStore: DemoFleetSyncStore(),
+                defaults: defaults
+            )
+            state.selectedInstanceID = DemoData.primaryInstanceID
+
+            modelContainer = container
+            _demoState = State(initialValue: state)
+        } catch {
+            fatalError("Unable to create PortOS demo: \(error.localizedDescription)")
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Label("Offline Demo", systemImage: "sparkles")
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Button("Done") { dismiss() }
+                    .font(.subheadline.weight(.semibold))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.portPanel)
+
+            Divider()
+
+            AppShellView()
+                .environment(demoState)
+                .modelContainer(modelContainer)
+        }
+        .background(Color.portCanvas.ignoresSafeArea())
     }
 }
 
