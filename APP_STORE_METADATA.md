@@ -46,4 +46,8 @@ PortOS is self-hosted software for machines you own and manage. This companion a
 
 ## App Review notes
 
-No account is required. On the empty Fleet screen, tap **Explore Demo** to enter an offline, fully featured demo with three fictional PortOS instances. The demo makes no network, Keychain, or iCloud requests and can be exited with **Done**. For live use, users add their own PortOS instance reachable over Tailscale.
+This app has **no user accounts, sign-in, registration, or hosted service**. Please do not request a demo username or password.
+
+The optional “PortOS password” field is not an app login: it is HTTP Basic authentication for a user's own self-hosted PortOS server, and is only shown after that server reports it requires a password.
+
+For complete review without a server or credentials, open **Explore Demo** on the initial Fleet screen, or choose **Settings → Explore offline demo**. This launches a fully featured demo with three fictional PortOS instances. It requires no login, password, account, network access, Keychain, or iCloud access; exit with **Done**. For live use, users add their own PortOS instance reachable over Tailscale.

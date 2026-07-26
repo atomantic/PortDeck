@@ -85,7 +85,7 @@ struct FleetView: View {
                 }
             }
             .sheet(isPresented: $showingAddInstance) { AddInstanceView() }
-            .fullScreenCover(isPresented: $showingDemo) { DemoExperienceView() }
+            .fullScreenCover(isPresented: $showingDemo) { OfflineDemoView() }
             .refreshable { await refreshAll() }
             .task {
                 if appState.iCloudSyncEnabled {
@@ -190,8 +190,12 @@ struct FleetView: View {
     }
 }
 
+/// A self-contained experience for prospective users and App Review.
+///
+/// It deliberately uses in-memory data and a simulated transport, so it never
+/// needs a PortOS host, an account, a password, Keychain, or iCloud access.
 @MainActor
-private struct DemoExperienceView: View {
+struct OfflineDemoView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var demoState: AppState
     private let modelContainer: ModelContainer

@@ -35,6 +35,21 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Add an instance"].waitForExistence(timeout: 3))
     }
 
+    func testOfflineDemoCanBeEnteredFromSettingsWithoutLogin() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UseInMemoryStore"]
+        app.launch()
+        app.tabBars.buttons["Settings"].tap()
+
+        let exploreDemo = app.buttons["Explore offline demo"]
+        XCTAssertTrue(exploreDemo.waitForExistence(timeout: 3))
+        exploreDemo.tap()
+
+        XCTAssertTrue(app.staticTexts["Offline Demo"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Atlas Studio"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Done"].exists)
+    }
+
     func testCaptureExplainsMissingInstance() {
         let app = XCUIApplication()
         app.launchArguments = ["-UseInMemoryStore"]

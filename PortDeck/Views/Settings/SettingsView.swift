@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var isSyncing = false
     @State private var syncMessage: String?
     @State private var syncFailed = false
+    @State private var showingOfflineDemo = false
 
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
@@ -76,6 +77,19 @@ struct SettingsView: View {
                     Label("Optional encrypted iCloud sync", systemImage: "icloud.and.arrow.up")
                 }
 
+                Section {
+                    Button {
+                        showingOfflineDemo = true
+                    } label: {
+                        Label("Explore offline demo", systemImage: "sparkles")
+                    }
+                    .accessibilityHint("Opens a fully featured demo with no server, account, or password required")
+                } header: {
+                    Text("Try PortOS")
+                } footer: {
+                    Text("No PortOS server, account, or login is required. The demo has fictional fleet data and uses no network, Keychain, or iCloud access.")
+                }
+
                 Section("Project") {
                     Link(destination: URL(string: "https://github.com/atomantic/PortOS/issues/2678")!) {
                         Label("Companion API contract", systemImage: "doc.text")
@@ -86,6 +100,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .fullScreenCover(isPresented: $showingOfflineDemo) { OfflineDemoView() }
         }
     }
 
