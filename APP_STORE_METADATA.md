@@ -51,3 +51,5 @@ This app has **no user accounts, sign-in, registration, or hosted service**. Ple
 The optional “PortOS password” field is not an app login: it is HTTP Basic authentication for a user's own self-hosted PortOS server, and is only shown after that server reports it requires a password.
 
 For complete review without a server or credentials, open **Explore Demo** on the initial Fleet screen, or choose **Settings → Explore offline demo**. This launches a fully featured demo with three fictional PortOS instances. It requires no login, password, account, network access, Keychain, or iCloud access; exit with **Done**. For live use, users add their own PortOS instance reachable over Tailscale.
+
+The app permits HTTP connections because users may operate PortOS on dynamic private Tailscale, MagicDNS, or local-network addresses that cannot be enumerated as static ATS exception domains. HTTPS is supported and uses normal system trust evaluation; the app never disables certificate validation. The offline review demo makes no network requests.

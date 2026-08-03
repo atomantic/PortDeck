@@ -6,6 +6,8 @@ struct ActionsView: View {
     @Query(sort: \PortOSInstance.addedAt) private var instances: [PortOSInstance]
 
     @State private var manifest: PaletteManifest?
+    @State private var manifestInstanceID: UUID?
+    @State private var currentLoadID: UUID?
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var searchText = ""
@@ -42,7 +44,8 @@ struct ActionsView: View {
                         if let errorMessage { InlineMessage(text: errorMessage, kind: .error) }
                         if isLoading {
                             ProgressView("Loading live actions…").padding(.top, 60)
-                        } else if manifest != nil {
+                        } else if manifest != nil,
+                                  manifestInstanceID == selectedInstance?.localID {
                             ForEach(sections, id: \.0) { section, actions in
                                 VStack(alignment: .leading, spacing: 10) {
                                     Text(section.uppercased())
@@ -99,15 +102,38 @@ struct ActionsView: View {
 
     @MainActor
     private func loadManifest() async {
-        guard let instance = selectedInstance, let baseURL = instance.baseURL else { return }
+        guard let instance = selectedInstance, let baseURL = instance.baseURL else {
+            manifest = nil
+            manifestInstanceID = nil
+            return
+        }
+        let instanceID = instance.localID
+        let loadID = UUID()
+        currentLoadID = loadID
+        manifest = nil
+        manifestInstanceID = nil
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            if currentLoadID == loadID {
+                isLoading = false
+            }
+        }
         do {
-            let password = try appState.credentials.password(for: instance.localID)
-            manifest = try await appState.api.paletteManifest(baseURL: baseURL, password: password)
+            let password = try appState.credentials.password(for: instanceID)
+            let loadedManifest = try await appState.api.paletteManifest(baseURL: baseURL, password: password)
+            try Task.checkCancellation()
+            guard currentLoadID == loadID,
+                  selectedInstance?.localID == instanceID else { return }
+            manifest = loadedManifest
+            manifestInstanceID = instanceID
+        } catch is CancellationError {
+            return
         } catch {
+            guard currentLoadID == loadID,
+                  selectedInstance?.localID == instanceID else { return }
             manifest = nil
+            manifestInstanceID = nil
             errorMessage = error.localizedDescription
         }
     }

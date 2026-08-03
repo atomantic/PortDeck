@@ -10,10 +10,6 @@ on:
 
 env:
   IPHONEOS_DEPLOYMENT_TARGET: ${{ vars.IPHONEOS_DEPLOYMENT_TARGET }}
-  TEAM_ID:                  ${{ secrets.TEAM_ID }}
-  APPSTORE_API_KEY_ID:      ${{ secrets.APPSTORE_API_KEY_ID }}
-  APPSTORE_ISSUER_ID:       ${{ secrets.APPSTORE_ISSUER_ID }}
-  APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
 
 jobs:
   ci:
@@ -66,11 +62,28 @@ jobs:
             -skipMacroValidation \
             | xcbeautify
 
+          xcodebuild test \
+            -project PortDeck.xcodeproj \
+            -scheme PortDeck \
+            -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredAndExited \
+            -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredFromSettingsWithoutLogin \
+            -destination "$DESTINATION" \
+            -destination-timeout 60 \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            | xcbeautify
+
   cd:
     runs-on: macos-latest
     name: Build and Deploy to TestFlight
     needs: ci
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testflight' || startsWith(github.ref, 'refs/heads/release/'))
+    # Main is shipped by deploy.sh; keeping CI deployment on release branches
+    # avoids uploading the same build twice when deploy.sh pushes its bump.
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/testflight' || startsWith(github.ref, 'refs/heads/release/'))
 
     steps:
       - uses: actions/checkout@v6
@@ -81,9 +94,11 @@ jobs:
           xcode-version: 'latest-stable'
 
       - name: Create ASC key file
+        env:
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
           cat > "$GITHUB_WORKSPACE/AuthKey.p8" <<EOF
-          ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          $APPSTORE_API_PRIVATE_KEY
           EOF
           chmod 600 "$GITHUB_WORKSPACE/AuthKey.p8"
 
@@ -107,7 +122,15 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             archive
 
+      - name: Verify archived privacy manifest
+        run: |
+          PRIVACY_MANIFEST="build/PortDeck.xcarchive/Products/Applications/PortDeck.app/PrivacyInfo.xcprivacy"
+          test -f "$PRIVACY_MANIFEST"
+          plutil -lint "$PRIVACY_MANIFEST"
+
       - name: Create exportOptions.plist
+        env:
+          TEAM_ID: ${{ secrets.TEAM_ID }}
         run: |
           cat > exportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>

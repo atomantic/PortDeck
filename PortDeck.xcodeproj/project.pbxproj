@@ -10,6 +10,7 @@
 		0273C1FE0888B2E0D55CD108 /* PortOSAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A3090AE0C4E1E1A0F60180 /* PortOSAPIModels.swift */; };
 		13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */; };
 		17CD4D3603FB5627EE6990F9 /* ActionFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA29F8E1CEDE46EDF7EEFE7 /* ActionFormView.swift */; };
+		285A90F7A74B59972111F181 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */; };
 		30E740B8D8D24AFDDCBD46F7 /* KeychainCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDAB0A6119E7E7638D040A3 /* KeychainCredentialStore.swift */; };
 		34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4483786345517DFB11EE9B4B /* EditInstanceView.swift */; };
 		3469DBA19350C02B39FA4163 /* PortOSInstanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986E5FC9C6C9F4FDAC4504B9 /* PortOSInstanceTests.swift */; };
@@ -97,6 +98,7 @@
 		CE3A2E177F6BDD305E318E13 /* PreviewAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PreviewAssets.xcassets; sourceTree = "<group>"; };
 		D99D3575365329B47833DA9B /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
 		DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetSyncCoordinator.swift; sourceTree = "<group>"; };
+		E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E4466967E5BD54DEB9A21233 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 		EEA29F8E1CEDE46EDF7EEFE7 /* ActionFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionFormView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -216,6 +218,7 @@
 				0251E993CB15E99626E4B325 /* Info.plist */,
 				638C6A9825611C0AFDDB9D14 /* PortDeck.entitlements */,
 				982175FF5309C8E30EAD19F7 /* PortDeckApp.swift */,
+				E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */,
 				569B13184101473860895F7C /* Extensions */,
 				2466C402ECA955D566F4A969 /* Models */,
 				E18AF625CC7A7F7AC2391D7B /* Navigation */,
@@ -388,6 +391,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D13D348D24B5E4648149AAE9 /* Assets.xcassets in Resources */,
+				285A90F7A74B59972111F181 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -531,7 +535,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = TYQ32QCF6K;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -574,7 +578,6 @@
 				INFOPLIST_FILE = PortDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PortOS;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -638,7 +641,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 11;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = TYQ32QCF6K;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -691,7 +694,6 @@
 				INFOPLIST_FILE = PortDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PortOS;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

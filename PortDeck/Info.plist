@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>PortOS uses the microphone to dictate entries and, when explicitly enabled, send audio directly to your selected self-managed PortOS instance.</string>
+	<string>PortOS uses the microphone for on-device dictation. Only recognized text is sent to your selected self-managed PortOS instance.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>PortOS uses on-device speech recognition to turn dictation into text before sending it to your PortOS instance.</string>
 	<key>NSLocalNetworkUsageDescription</key>
@@ -25,5 +25,7 @@
 			<string>net.shadowpuppet.PortDeck</string>
 		</dict>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

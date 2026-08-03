@@ -52,7 +52,7 @@ struct FleetView: View {
                                     } label: {
                                         Image(systemName: "scope")
                                             .font(.headline)
-                                            .frame(width: 42, height: 42)
+                                            .frame(width: 44, height: 44)
                                             .background(Color.portPanel, in: Circle())
                                     }
                                     .accessibilityLabel("Use \(instance.displayName) for captures")
@@ -213,7 +213,8 @@ struct OfflineDemoView: View {
                 api: PortOSAPIClient(transport: DemoHTTPTransport()),
                 credentials: DemoCredentialStore(),
                 fleetSyncStore: DemoFleetSyncStore(),
-                defaults: defaults
+                defaults: defaults,
+                isOfflineDemo: true
             )
             state.selectedInstanceID = DemoData.primaryInstanceID
 
@@ -287,6 +288,7 @@ private struct InstanceCard: View {
                     Image(systemName: instance.authRequired ? "lock.fill" : "lock.open")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel(instance.authRequired ? "Password required" : "No password required")
                 }
             }
         }

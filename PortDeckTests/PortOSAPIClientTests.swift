@@ -74,7 +74,24 @@ final class PortOSAPIClientTests: XCTestCase {
         XCTAssertEqual(args["text"] as? String, "Remember milk")
     }
 
+    func testCancellationIsNotConvertedToUnreachable() async {
+        let client = PortOSAPIClient(transport: CancellationTransport())
+
+        do {
+            _ = try await client.discover(baseURL: baseURL)
+            XCTFail("Expected cancellation")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+    }
+
     private var baseURL: URL { URL(string: "https://studio.tail123.ts.net:5555")! }
+}
+
+private actor CancellationTransport: HTTPTransport {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        throw CancellationError()
+    }
 }
 
 private actor MockTransport: HTTPTransport {

@@ -32,7 +32,7 @@ struct ActiveInstancePicker: View {
                     Text(selected?.displayName ?? "Choose an instance")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(2)
                 }
                 Spacer()
                 Image(systemName: "chevron.up.chevron.down")

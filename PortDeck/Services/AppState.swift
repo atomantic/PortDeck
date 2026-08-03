@@ -25,6 +25,7 @@ final class AppState {
 
     let api: PortOSAPIClient
     let credentials: any CredentialStore
+    let isOfflineDemo: Bool
     private(set) var iCloudSyncEnabled: Bool
     private let fleetSyncCoordinator: FleetSyncCoordinator
     private let defaults: UserDefaults
@@ -35,11 +36,13 @@ final class AppState {
         api: PortOSAPIClient = PortOSAPIClient(),
         credentials: any CredentialStore = KeychainCredentialStore(),
         fleetSyncStore: any FleetSyncStore = ICloudFleetSyncStore(),
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        isOfflineDemo: Bool = false
     ) {
         self.api = api
         self.credentials = credentials
         self.defaults = defaults
+        self.isOfflineDemo = isOfflineDemo
         iCloudSyncEnabled = defaults.bool(forKey: Self.iCloudSyncKey)
         fleetSyncCoordinator = FleetSyncCoordinator(store: fleetSyncStore, credentials: credentials)
         if let value = defaults.string(forKey: Self.selectedInstanceKey) {

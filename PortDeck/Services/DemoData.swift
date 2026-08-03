@@ -44,34 +44,44 @@ enum DemoData {
 struct DemoHTTPTransport: HTTPTransport {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         try await Task.sleep(for: .milliseconds(80))
-        let body = responseBody(for: request)
+        let (statusCode, body) = response(for: request)
         let response = HTTPURLResponse(
             url: request.url!,
-            statusCode: 200,
+            statusCode: statusCode,
             httpVersion: "HTTP/1.1",
             headerFields: ["Content-Type": "application/json"]
         )!
         return (Data(body.utf8), response)
     }
 
-    private func responseBody(for request: URLRequest) -> String {
+    private func response(for request: URLRequest) -> (Int, String) {
         let path = request.url?.path ?? ""
-        if path == "/api/system/health" { return healthBody(for: request.url?.host) }
-        if path == "/api/instances" { return topologyBody }
-        if path == "/api/palette/manifest" { return manifestBody }
-        if path == "/api/instances/self" {
-            return #"{"instanceId":"portos-atlas","name":"Atlas Studio","defaultPeerFullSync":false}"#
+        let method = request.httpMethod ?? "GET"
+        if method == "GET", path == "/api/system/health" { return (200, healthBody(for: request.url?.host)) }
+        if method == "GET", path == "/api/instances" { return (200, topologyBody) }
+        if method == "GET", path == "/api/palette/manifest" { return (200, manifestBody) }
+        if method == "PUT", path == "/api/instances/self" {
+            return (200, #"{"instanceId":"portos-atlas","name":"Atlas Studio","defaultPeerFullSync":false}"#)
         }
-        if path.hasPrefix("/api/palette/action/") {
-            return #"{"ok":true,"result":{"ok":true,"summary":"Action completed on Atlas Studio."}}"#
+        if method == "POST", path.hasPrefix("/api/palette/action/") {
+            return (200, #"{"ok":true,"result":{"ok":true,"summary":"Action completed on Atlas Studio."}}"#)
         }
-        if path.hasPrefix("/api/brain/daily-log/") {
-            return #"{"date":"2026-07-16","entry":{"ok":true,"summary":"Added to the daily log."}}"#
+        if method == "POST", path.hasPrefix("/api/brain/daily-log/"), path.hasSuffix("/append") {
+            return (200, #"{"date":"2026-07-16","entry":{"ok":true,"summary":"Added to the daily log."}}"#)
         }
-        if path.hasSuffix("/sync") || request.httpMethod == "DELETE" {
-            return #"{"ok":true}"#
+        if method == "DELETE", path.hasPrefix("/api/instances/peers/") {
+            return (200, #"{"ok":true}"#)
         }
-        return peerBody
+        if method == "POST", path.hasPrefix("/api/instances/peers/"), path.hasSuffix("/sync") {
+            return (200, #"{"ok":true}"#)
+        }
+        if path == "/api/instances/peers", method == "POST" {
+            return (200, peerBody)
+        }
+        if path.hasPrefix("/api/instances/peers/"), ["POST", "PUT"].contains(method) {
+            return (200, peerBody)
+        }
+        return (404, #"{"error":"Unknown offline demo route"}"#)
     }
 
     private func healthBody(for host: String?) -> String {

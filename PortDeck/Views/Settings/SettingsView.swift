@@ -43,51 +43,60 @@ struct SettingsView: View {
                     Text("Passwordless PortOS installs use the tailnet trust boundary. Password-protected installs use HTTP Basic. Credentials stay in the local Keychain unless optional iCloud sync is enabled.")
                 }
 
-                Section {
-                    Toggle("Sync fleet and passwords", isOn: Binding(
-                        get: { appState.iCloudSyncEnabled },
-                        set: { setICloudSyncEnabled($0) }
-                    ))
-                    .disabled(isSyncing)
-                    if appState.iCloudSyncEnabled {
-                        Button {
-                            synchronizeNow()
-                        } label: {
-                            HStack {
-                                Label("Sync now", systemImage: "arrow.triangle.2.circlepath.icloud")
-                                Spacer()
-                                if isSyncing { ProgressView().controlSize(.small) }
-                            }
-                        }
+                if appState.isOfflineDemo {
+                    Section("iCloud") {
+                        Label("Unavailable in offline demo", systemImage: "icloud.slash")
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Section {
+                        Toggle("Sync fleet and passwords", isOn: Binding(
+                            get: { appState.iCloudSyncEnabled },
+                            set: { setICloudSyncEnabled($0) }
+                        ))
                         .disabled(isSyncing)
+                        if appState.iCloudSyncEnabled {
+                            Button {
+                                synchronizeNow()
+                            } label: {
+                                HStack {
+                                    Label("Sync now", systemImage: "arrow.triangle.2.circlepath.icloud")
+                                    Spacer()
+                                    if isSyncing { ProgressView().controlSize(.small) }
+                                }
+                            }
+                            .disabled(isSyncing)
+                        }
+                        if let syncMessage {
+                            InlineMessage(text: syncMessage, kind: syncFailed ? .error : .success)
+                        }
+                    } header: {
+                        Text("iCloud")
+                    } footer: {
+                        Text("Optional. Fleet connection profiles and passwords use secure iCloud Keychain items for this app. SwiftData remains the local working copy. Turning sync off keeps device-only copies and leaves existing iCloud copies available to other opted-in devices.")
                     }
-                    if let syncMessage {
-                        InlineMessage(text: syncMessage, kind: syncFailed ? .error : .success)
-                    }
-                } header: {
-                    Text("iCloud")
-                } footer: {
-                    Text("Optional. Fleet connection profiles and passwords use secure iCloud Keychain items for this app. SwiftData remains the local working copy. Turning sync off keeps device-only copies and leaves existing iCloud copies available to other opted-in devices.")
                 }
 
                 Section("Privacy") {
                     Label("No PortDeck-operated servers", systemImage: "server.rack")
                     Label("Current dictation sends text only", systemImage: "text.bubble")
-                    Label("Optional audio may go directly to your PortOS", systemImage: "waveform.and.arrow.up")
+                    Label("Speech recognition runs on device", systemImage: "waveform")
                     Label("Optional encrypted iCloud sync", systemImage: "icloud.and.arrow.up")
                 }
 
-                Section {
-                    Button {
-                        showingOfflineDemo = true
-                    } label: {
-                        Label("Explore offline demo", systemImage: "sparkles")
+                if !appState.isOfflineDemo {
+                    Section {
+                        Button {
+                            showingOfflineDemo = true
+                        } label: {
+                            Label("Explore offline demo", systemImage: "sparkles")
+                        }
+                        .accessibilityHint("Opens a fully featured demo with no server, account, or password required")
+                    } header: {
+                        Text("Try PortOS")
+                    } footer: {
+                        Text("No PortOS server, account, or login is required. The demo has fictional fleet data and uses no network, Keychain, or iCloud access.")
                     }
-                    .accessibilityHint("Opens a fully featured demo with no server, account, or password required")
-                } header: {
-                    Text("Try PortOS")
-                } footer: {
-                    Text("No PortOS server, account, or login is required. The demo has fictional fleet data and uses no network, Keychain, or iCloud access.")
                 }
 
                 Section("Project") {

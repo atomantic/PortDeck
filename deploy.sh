@@ -15,12 +15,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [ -f .env ]; then
+ENV_FILE="${PORTDECK_ENV_FILE:-.env}"
+if [ -f "$ENV_FILE" ]; then
     set -a
-    source .env
+    source "$ENV_FILE"
     set +a
 else
-    echo "❌ .env file not found. Copy .env.example to .env and fill in values."
+    echo "❌ App Store environment file not found: $ENV_FILE"
     exit 1
 fi
 
@@ -177,6 +178,18 @@ for runtime, devices in data.get('devices', {}).items():
         CODE_SIGNING_ALLOWED=NO \
         -quiet
     echo "✅ Tests passed"
+
+    echo "🧪 Verifying both offline App Review demo entry points..."
+    xcodebuild test \
+        -project "$PROJECT" \
+        -scheme "$SCHEME_TEST" \
+        -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredAndExited \
+        -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredFromSettingsWithoutLogin \
+        -destination "$DESTINATION" \
+        -configuration Debug \
+        CODE_SIGNING_ALLOWED=NO \
+        -quiet
+    echo "✅ Offline App Review demo passed"
 fi
 
 rm -rf "$BUILD_DIR"
@@ -226,6 +239,14 @@ if $BUILD_IOS; then
         -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
         -quiet
     echo "✅ iOS archive complete"
+
+    PRIVACY_MANIFEST="$ARCHIVE_IOS/Products/Applications/$APP_NAME.app/PrivacyInfo.xcprivacy"
+    if [ ! -f "$PRIVACY_MANIFEST" ]; then
+        echo "❌ PrivacyInfo.xcprivacy is missing from the archived app"
+        exit 1
+    fi
+    plutil -lint "$PRIVACY_MANIFEST"
+    echo "✅ Archived privacy manifest verified"
 
     echo "📤 Exporting iOS IPA..."
     xcodebuild -exportArchive \

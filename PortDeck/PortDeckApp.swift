@@ -25,7 +25,8 @@ struct PortDeckApp: App {
                     api: PortOSAPIClient(transport: DemoHTTPTransport()),
                     credentials: DemoCredentialStore(),
                     fleetSyncStore: DemoFleetSyncStore(),
-                    defaults: defaults
+                    defaults: defaults,
+                    isOfflineDemo: true
                 )
                 state.selectedInstanceID = DemoData.primaryInstanceID
                 _appState = State(initialValue: state)

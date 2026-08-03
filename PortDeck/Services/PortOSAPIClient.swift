@@ -197,6 +197,9 @@ struct PortOSAPIClient: Sendable {
         do {
             (data, response) = try await transport.data(for: request)
         } catch {
+            if error is CancellationError || Task.isCancelled {
+                throw CancellationError()
+            }
             throw PortOSAPIError.unreachable(error.localizedDescription)
         }
         guard let http = response as? HTTPURLResponse else { throw PortOSAPIError.invalidResponse }

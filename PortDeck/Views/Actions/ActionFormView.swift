@@ -60,7 +60,9 @@ struct ActionFormView: View {
                     HStack {
                         if isRunning { ProgressView().tint(.white) }
                         Label("Run on \(instance.displayName)", systemImage: "play.fill")
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity)
                 }
