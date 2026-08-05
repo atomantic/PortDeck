@@ -40,6 +40,20 @@ final class ActionResultDisplayTests: XCTestCase {
         XCTAssertTrue(display.facts.contains { $0.label == "Tags" })
     }
 
+    func testAnEmptyKnownCollectionStillWinsOverAnIncidentalArray() throws {
+        // "No entries" is the answer here — rendering `tags` as the list would hide it.
+        let display = try makeDisplay(#"{ "ok": true, "items": [], "tags": ["inbox"], "summary": "Brain inbox is empty." }"#)
+        XCTAssertEqual(display.collectionLabel, "Items")
+        XCTAssertTrue(display.rows.isEmpty)
+        XCTAssertTrue(display.hasCollection)
+    }
+
+    func testFieldsKeepDistinctIdentityWhenLabelsCollide() throws {
+        let display = try makeDisplay(#"{ "ok": true, "userId": 1, "user_id": 2 }"#)
+        XCTAssertEqual(display.facts.map(\.label), ["User id", "User id"])
+        XCTAssertEqual(Set(display.facts.map(\.id)).count, 2)
+    }
+
     func testEmptyCollectionIsDistinguishedFromANonListResult() throws {
         let empty = try makeDisplay(#"{ "ok": true, "items": [], "summary": "Brain inbox is empty." }"#)
         XCTAssertTrue(empty.hasCollection)

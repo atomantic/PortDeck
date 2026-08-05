@@ -63,7 +63,8 @@ final class PaletteActionBehaviorTests: XCTestCase {
     func testAWriteVerbBeatsAReadVerbInTheSameID() throws {
         // PortOS ships new actions without an app release, so ids that read half like a
         // query — "back it up now", "mark it read" — must not auto-invoke.
-        for id in ["backup_now", "sync_now", "feeds_mark_read", "cache_clear_stats"] {
+        for id in ["backup_now", "sync_now", "feeds_mark_read", "cache_clear_stats",
+                   "recent_clearAll", "editRecent", "notes.replace.list"] {
             let action = try PaletteActionFixture.make(id: id, properties: "{}")
             XCTAssertFalse(action.isReadShaped, "\(id) mutates and must stay a manual run")
         }

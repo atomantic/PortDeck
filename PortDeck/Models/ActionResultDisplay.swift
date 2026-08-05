@@ -10,10 +10,17 @@ import Foundation
 /// the raw JSON stays available for anything this shaping does not anticipate.
 struct ActionResultDisplay: Equatable, Sendable {
     struct Field: Equatable, Sendable, Identifiable {
+        /// The payload's own key. Two keys can humanize to the same label (`userId` and
+        /// `user_id` both read "User id"), and `ForEach` needs the identity to stay unique.
+        let id: String
         let label: String
         let value: String
 
-        var id: String { label }
+        init(key: String, value: String) {
+            id = key
+            label = key.humanizedFieldName
+            self.value = value
+        }
     }
 
     struct Row: Equatable, Sendable, Identifiable {
@@ -52,13 +59,13 @@ struct ActionResultDisplay: Equatable, Sendable {
         collectionLabel = collection.map { $0.key.humanizedFieldName }
         rows = Self.makeRows(from: collection?.values ?? [])
         passages = passageKeys.sorted().map {
-            Field(label: $0.humanizedFieldName, value: object[$0]?.stringValue ?? "")
+            Field(key: $0, value: object[$0]?.stringValue ?? "")
         }
         facts = object
             .filter { key, _ in
                 !Self.hiddenKeys.contains(key) && key != collection?.key && !passageKeys.contains(key)
             }
-            .map { Field(label: $0.key.humanizedFieldName, value: Self.displayString($0.value)) }
+            .map { Field(key: $0.key, value: Self.displayString($0.value)) }
             .filter { !$0.value.isEmpty }
             .sorted { $0.label < $1.label }
         self.result = result
@@ -91,6 +98,10 @@ struct ActionResultDisplay: Equatable, Sendable {
                 let right = collectionPriority.firstIndex(of: rhs.key) ?? Int.max
                 return left == right ? lhs.key < rhs.key : left < right
             }
+        // A known payload key wins even when it came back empty — an empty `items` means
+        // "no entries", and letting an incidental non-empty array (`tags`) take its place
+        // would render the wrong list and hide the empty state.
+        if let known = arrays.first(where: { collectionPriority.contains($0.key) }) { return known }
         return arrays.first { !$0.values.isEmpty } ?? arrays.first
     }
 
@@ -113,7 +124,7 @@ struct ActionResultDisplay: Equatable, Sendable {
             }
             let fields = object
                 .filter { key, _ in key != titleKey && key != subtitleKey && !hiddenKeys.contains(key) }
-                .map { Field(label: $0.key.humanizedFieldName, value: displayString($0.value)) }
+                .map { Field(key: $0.key, value: displayString($0.value)) }
                 .filter { !$0.value.isEmpty }
                 .sorted { $0.label < $1.label }
             return Row(

@@ -22,12 +22,14 @@ extension PaletteAction {
     ]
 
     private static let writeVerbs: Set<String> = [
-        "add", "append", "apply", "backup", "cancel", "capture", "clear", "create",
-        "delete", "disable", "dismiss", "dispatch", "enable", "execute", "export",
-        "generate", "import", "install", "invoke", "kill", "mark", "move", "pause",
-        "post", "purge", "remove", "rename", "reset", "restart", "restore", "resume",
-        "run", "save", "schedule", "send", "set", "start", "stop", "switch", "sync",
-        "toggle", "trigger", "update", "upgrade", "write"
+        "add", "append", "apply", "archive", "assign", "backup", "cancel", "capture",
+        "clear", "create", "delete", "disable", "dismiss", "dispatch", "edit", "enable",
+        "execute", "export", "generate", "import", "install", "invoke", "kill", "mark",
+        "move", "pause", "post", "prune", "publish", "purge", "remove", "rename",
+        "replace", "reset", "restart", "restore", "resume", "revoke", "rollback", "run",
+        "save", "schedule", "send", "set", "snooze", "start", "stop", "subscribe",
+        "switch", "sync", "toggle", "trigger", "unassign", "unsubscribe", "update",
+        "upgrade", "upload", "write"
     ]
 
     /// PortOS list tools all name their page size `limit`; nothing else is assumed to be one.
@@ -43,9 +45,14 @@ extension PaletteAction {
     /// window re-invokes the action, and doing that to a writer would repeat its side effect.
     var isReadShaped: Bool {
         guard destructive != true else { return false }
+        // Humanizing splits on separators *and* camel-case boundaries, so a `listRecent`
+        // or `recent_clearAll` id tokenizes the same way a snake_case one does.
         let components = id
-            .split(whereSeparator: { $0 == "_" || $0 == "-" || $0 == "." })
-            .map { $0.lowercased() }
+            .replacingOccurrences(of: ".", with: "_")
+            .humanizedFieldName
+            .lowercased()
+            .split(separator: " ")
+            .map(String.init)
         guard !components.contains(where: Self.writeVerbs.contains) else { return false }
         return components.contains(where: Self.readVerbs.contains)
     }
