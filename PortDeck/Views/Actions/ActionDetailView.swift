@@ -247,6 +247,7 @@ struct ActionDetailView: View {
         errorMessage = nil
         if !paging { reachedEnd = false }
         let previousRowCount = display?.rows.count ?? 0
+        let previousPageSize = pageSizeParameter.flatMap { arguments.values[$0] }
         do {
             let payload = try ActionArgumentBuilder.build(action: action, state: arguments)
             let password = try appState.credentials.password(for: instance.localID)
@@ -271,6 +272,9 @@ struct ActionDetailView: View {
             return
         } catch {
             errorMessage = error.localizedDescription
+            // A page that never arrived must not widen the window: otherwise each retry
+            // at the bottom of a failing list asks for a larger one than the last.
+            if paging, let key = pageSizeParameter { arguments.values[key] = previousPageSize }
         }
     }
 }
