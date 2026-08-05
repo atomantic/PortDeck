@@ -216,7 +216,10 @@ struct ActionDetailView: View {
     /// Widens the result window and refetches. PortOS clamps its own maximum, so a page
     /// that comes back no longer than the last one latches the end of the list.
     private func loadMore() {
-        guard canPage, let key = pageSizeParameter, let rowCount = display?.rows.count else { return }
+        // `!isRunning` gates the *mutation*, not just the fetch: scroll fires this every frame,
+        // and `startRun`'s own guard would let each one widen the window again while the
+        // request it already started is still in flight.
+        guard canPage, !isRunning, let key = pageSizeParameter, let rowCount = display?.rows.count else { return }
         let requested = max(arguments.integer(for: key) ?? Self.pageStep, rowCount)
         arguments.setValue(String(requested + Self.pageStep), for: key)
         startRun(paging: true)
