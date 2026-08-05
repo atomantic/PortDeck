@@ -19,6 +19,7 @@ The app is now fleet-first. It connects directly to one or more PortOS instances
 - Add, connect, probe, sync, enable/disable, full-mirror, and remove federation peers
 - Capture typed or on-device dictated text to Brain and Daily Log
 - Load `/api/palette/manifest` and generate native forms for the server's palette-safe actions
+- Open read-only actions (recent Brain entries, goals, PM2 status, calendar, …) as live pages that fetch on open, render the returned records, and widen the window by parameter or by scrolling
 - Handle older PortOS health payloads that predate `name` and `authRequired`
 
 The previous Recall session-recording, audio-retention, analysis, and memory-extraction product has been removed. The new privacy boundary still permits a future explicit capture mode that uploads audio directly to the selected user-owned PortOS instance for processing; PortDeck does not require or operate a relay service.

@@ -59,6 +59,14 @@ The Actions tab deliberately consumes the live palette manifest instead of maint
 
 This keeps safe new PortOS actions discoverable without an app release while preserving the server's whitelist as the authority.
 
+### Readers vs. run forms
+
+The manifest does not label actions read vs. write, so PortDeck infers it from the id. An action becomes a *reader* — a page that fetches the moment it opens — only when one of its id components is a read verb (`list`, `recent`, `search`, `status`, `today`, `now`, `digest`, …), none is a write verb (`set`, `start`, `sync`, `backup`, `mark`, `capture`, …), it declares no required parameters, and PortOS did not flag it destructive. Every condition earns its place: `timer_set` takes no required parameters and still creates a timer; `backup_now` and `feeds_mark_read` read half like queries; and generative actions such as `ui_ask` and `image_generate` must never spend a provider call because someone opened a page. Ids neither list recognizes fail closed to a manual Run form.
+
+Because PortOS installs update independently of App Store releases, a new server-side read tool whose id misses the verb list degrades to a run form rather than misbehaving. A server-declared `readOnly` flag on `PALETTE_ACTIONS` would remove the guessing entirely; the heuristic should become the older-peer fallback once that exists.
+
+Reader pages render the payload rather than only its `summary`: the primary collection in the response (`items`, `hits`, `goals`, `events`, …) becomes rows, long-form strings become passages, remaining scalars become facts, and the raw JSON stays one disclosure away. Their parameters move into a collapsed Options panel, and the result window widens either by editing the page-size parameter (`limit`, `count`, `max`) or by scrolling to the end of the list. PortOS clamps its own maximum, so a page that returns no more rows than the last one ends the list.
+
 ## Visual system
 
 The interface uses system typography, grouped adaptive surfaces, and a restrained cyan-to-violet identity on a system background. Cyan represents reachability and active routing; violet represents invoked capabilities. Green, amber, and red are reserved for state. The icon depicts one control port connected to three server nodes, replacing the old brain/recording identity.

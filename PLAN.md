@@ -46,8 +46,11 @@ PortDeck is the iOS companion for PortOS defined by [PortOS issue #2678](https:/
 - [x] Load the live native action surface from `GET /api/palette/manifest`
 - [x] Generate fields from each action's JSON parameter schema
 - [x] Confirm actions PortOS marks destructive
+- [x] Turn read-only palette actions into live pages that fetch on open, render the returned records, and page by parameter or by scrolling
 - [x] Keep current dictation on-device and document direct-to-PortOS audio as an allowed future opt-in transport
 - [ ] Upload audio directly to the active PortOS instance once its companion ingest endpoint exists
+- [ ] Add a `readOnly` flag (and a `hasMore`/`total` result field) to PortOS's `PALETTE_ACTIONS` so PortDeck stops inferring reader vs. writer and end-of-list from id verbs and row-count deltas; keep the client heuristic as the older-peer fallback
+- [ ] Extract the action fetch/page/latch state out of `ActionDetailView` into an `@Observable` runner so paging is unit-testable and reusable by a future dashboard widget
 
 ## Next: MeatSpace POST companion
 

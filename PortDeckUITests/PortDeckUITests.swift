@@ -64,6 +64,31 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Add an instance first"].exists)
     }
 
+    func testReaderActionRendersEntriesOnOpenAndPagesOnDemand() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo-data"]
+        app.launch()
+        app.tabBars.buttons["Actions"].tap()
+
+        let recentEntries = app.staticTexts["Recent Brain entries"].firstMatch
+        XCTAssertTrue(recentEntries.waitForExistence(timeout: 5))
+        recentEntries.tap()
+
+        // The page fetches on open — no form to fill, and the entries render, not just the summary.
+        XCTAssertTrue(app.staticTexts["Federation rollout: mirror the field kit before the demo, not after."]
+            .waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last 5 captures."].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Jul 16, 2026"].firstMatch.exists)
+
+        // Scrolling past the last entry widens the window.
+        let sixthEntry = app.staticTexts["Draft a one-page brief on what the companion should never do offline."]
+        XCTAssertFalse(sixthEntry.exists)
+        for _ in 0..<4 where !sixthEntry.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(sixthEntry.waitForExistence(timeout: 8))
+    }
+
     func testLaunchPerformance() {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             let app = XCUIApplication()
