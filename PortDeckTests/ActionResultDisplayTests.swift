@@ -108,6 +108,15 @@ final class ActionResultDisplayTests: XCTestCase {
         XCTAssertTrue(display.rows.allSatisfy { $0.fields.isEmpty })
     }
 
+    func testTimestampsHumanizeWithAndWithoutAZone() {
+        for raw in ["2026-07-16T19:41:00Z", "2026-07-16T19:41:00.250Z", "2026-07-16T19:41:00"] {
+            let rendered = ActionResultDisplay.humanizeTimestamp(raw)
+            XCTAssertNotEqual(rendered, raw, "\(raw) should be humanized")
+            XCTAssertTrue(rendered.contains("2026"), "unexpected rendering for \(raw): \(rendered)")
+        }
+        XCTAssertEqual(ActionResultDisplay.humanizeTimestamp("not a date"), "not a date")
+    }
+
     func testRawJSONIsAlwaysAvailable() throws {
         let display = try makeDisplay(#"{ "ok": true, "nested": { "a": 1 } }"#)
         XCTAssertTrue(display.rawJSON.contains("nested"))

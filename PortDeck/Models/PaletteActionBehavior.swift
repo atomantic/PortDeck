@@ -23,13 +23,15 @@ extension PaletteAction {
 
     private static let writeVerbs: Set<String> = [
         "add", "append", "apply", "archive", "assign", "backup", "cancel", "capture",
-        "clear", "create", "delete", "disable", "dismiss", "dispatch", "edit", "enable",
-        "execute", "export", "generate", "import", "install", "invoke", "kill", "mark",
-        "move", "pause", "post", "prune", "publish", "purge", "remove", "rename",
-        "replace", "reset", "restart", "restore", "resume", "revoke", "rollback", "run",
-        "save", "schedule", "send", "set", "snooze", "start", "stop", "subscribe",
+        "claim", "clear", "commit", "create", "delete", "deploy", "disable", "dismiss",
+        "dispatch", "drain", "edit", "enable", "execute", "export", "flush", "generate",
+        "import", "install", "invoke", "kill", "mark", "merge", "migrate", "move",
+        "pause", "post", "prune", "publish", "purge", "push", "reboot", "rebuild",
+        "reindex", "reload", "remove", "rename", "replace", "reset", "restart",
+        "restore", "resume", "revert", "revoke", "rollback", "rotate", "run", "save",
+        "schedule", "seed", "send", "set", "snooze", "start", "stop", "subscribe",
         "switch", "sync", "toggle", "trigger", "unassign", "unsubscribe", "update",
-        "upgrade", "upload", "write"
+        "upgrade", "upload", "wipe", "write"
     ]
 
     /// PortOS list tools all name their page size `limit`; nothing else is assumed to be one.

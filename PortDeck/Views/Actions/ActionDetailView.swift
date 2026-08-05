@@ -260,7 +260,13 @@ struct ActionDetailView: View {
             let result = ActionResultDisplay(result: response.result, envelopeOK: response.ok)
             display = result
             lastFetchedAt = .now
+            // End of list: the window stopped growing, or PortOS returned fewer rows than
+            // the window asked for — asking for more would just repeat the same page.
             if paging, result.rows.count <= previousRowCount { reachedEnd = true }
+            if let requested = pageSizeParameter.flatMap({ arguments.integer(for: $0) }),
+               result.rows.count < requested {
+                reachedEnd = true
+            }
         } catch is CancellationError {
             return
         } catch {

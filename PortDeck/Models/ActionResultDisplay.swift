@@ -159,10 +159,17 @@ struct ActionResultDisplay: Equatable, Sendable {
         if raw.count == 10, let date = dayFormatter.date(from: raw) {
             return dayDisplayFormatter.string(from: date)
         }
-        if raw.count >= 20, let date = isoFormatter.date(from: raw) ?? isoFractionalFormatter.date(from: raw) {
+        if raw.count >= 19, let date = parseTimestamp(raw) {
             return date.formatted(date: .abbreviated, time: .shortened)
         }
         return raw
+    }
+
+    private static func parseTimestamp(_ raw: String) -> Date? {
+        if let date = isoFormatter.date(from: raw) ?? isoFractionalFormatter.date(from: raw) { return date }
+        // Zone-less timestamps (`2026-08-05T18:36:22`) come out of SQL columns and fail
+        // ISO8601DateFormatter, which requires an offset. Read them as local time.
+        return raw.count == 19 ? zonelessFormatter.date(from: raw) : nil
     }
 
     private static let dayFormatter: DateFormatter = {
@@ -187,6 +194,13 @@ struct ActionResultDisplay: Equatable, Sendable {
     private static let isoFractionalFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let zonelessFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         return formatter
     }()
 }
