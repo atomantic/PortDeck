@@ -97,7 +97,7 @@ struct FederationPeer: Codable, Identifiable, Equatable, Sendable {
     }
 }
 
-struct PaletteManifest: Decodable, Sendable {
+struct PaletteManifest: Codable, Sendable {
     let actions: [PaletteAction]
 }
 
@@ -168,23 +168,64 @@ enum JSONValue: Codable, Equatable, Sendable {
         }
     }
 
-    var summary: String? {
-        guard case .object(let object) = self else { return nil }
-        guard case .string(let value) = object["summary"] else { return nil }
+    var objectValue: [String: JSONValue]? {
+        guard case .object(let value) = self else { return nil }
         return value
     }
 
-    var prettyPrinted: String {
-        guard let data = try? JSONEncoder.pretty.encode(self),
+    var arrayValue: [JSONValue]? {
+        guard case .array(let value) = self else { return nil }
+        return value
+    }
+
+    var stringValue: String? {
+        guard case .string(let value) = self else { return nil }
+        return value
+    }
+
+    var numberValue: Double? {
+        guard case .number(let value) = self else { return nil }
+        return value
+    }
+
+    var boolValue: Bool? {
+        guard case .bool(let value) = self else { return nil }
+        return value
+    }
+
+    /// `false` for containers, so callers can decide between an inline value and a nested render.
+    var isScalar: Bool {
+        switch self {
+        case .object, .array: false
+        default: true
+        }
+    }
+
+    var summary: String? { objectValue?["summary"]?.stringValue }
+
+    /// PortOS tools report failure as `ok: false` inside an HTTP 200 envelope.
+    var okFlag: Bool? { objectValue?["ok"]?.boolValue }
+
+    var prettyPrinted: String { encoded(with: .pretty) }
+
+    var compactJSON: String { encoded(with: .compact) }
+
+    private func encoded(with encoder: JSONEncoder) -> String {
+        guard let data = try? encoder.encode(self),
               let string = String(data: data, encoding: .utf8) else { return String(describing: self) }
         return string
     }
 }
 
 private extension JSONEncoder {
-    static let pretty: JSONEncoder = {
+    static let pretty = make(pretty: true)
+    static let compact = make(pretty: false)
+
+    private static func make(pretty: Bool) -> JSONEncoder {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        encoder.outputFormatting = pretty
+            ? [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            : [.sortedKeys, .withoutEscapingSlashes]
         return encoder
-    }()
+    }
 }

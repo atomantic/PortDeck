@@ -67,12 +67,21 @@ final class ScreenshotTests: XCTestCase {
         saveScreenshot("03_capture")
 
         selectTab("Actions")
-        XCTAssertTrue(app.staticTexts["Start Focus Session"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Recent Brain entries"].waitForExistence(timeout: 5))
         saveScreenshot("04_actions")
 
-        app.staticTexts["Start Focus Session"].firstMatch.tap()
+        app.staticTexts["Recent Brain entries"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Recent Brain entries"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.staticTexts["Last 5 captures."].waitForExistence(timeout: 5))
+        saveScreenshot("05_action_results")
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        let focusSession = app.staticTexts["Start Focus Session"].firstMatch
+        XCTAssertTrue(focusSession.waitForExistence(timeout: 4))
+        scrollUntilHittable(focusSession)
+        focusSession.tap()
         XCTAssertTrue(app.navigationBars["Start Focus Session"].waitForExistence(timeout: 4))
-        saveScreenshot("05_action_form")
+        saveScreenshot("06_action_form")
 
         selectTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 4))
@@ -80,7 +89,16 @@ final class ScreenshotTests: XCTestCase {
             app.swipeUp()
             Thread.sleep(forTimeInterval: 0.4)
         }
-        saveScreenshot("06_privacy")
+        saveScreenshot("07_privacy")
+    }
+
+    /// The action list grows as PortOS adds palette entries, so scroll rather than assume
+    /// a row sits above the fold.
+    private func scrollUntilHittable(_ element: XCUIElement, attempts: Int = 5) {
+        for _ in 0..<attempts where !element.isHittable {
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
     }
 
     private func selectTab(_ name: String) {

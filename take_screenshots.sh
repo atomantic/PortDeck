@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
             TARGET_SCREEN="$2"; shift 2 ;;
         --help|-h)
             echo "Usage: $0 [--iphone-only|--ipad-only] [--screen <name>]"
-            echo "Screens: 01_fleet 02_federation 03_capture 04_actions 05_action_form 06_privacy"
+            echo "Screens: 01_fleet 02_federation 03_capture 04_actions 05_action_results 06_action_form 07_privacy"
             exit 0
             ;;
         *) echo "❌ Unknown option: $1"; exit 1 ;;

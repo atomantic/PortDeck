@@ -45,6 +45,28 @@ final class DemoDataTests: XCTestCase {
         XCTAssertEqual(dailyLog.entry.summary, "Added to the daily log.")
     }
 
+    func testDemoReaderActionsReturnRenderableEntriesAndHonorTheLimit() async throws {
+        let baseURL = try XCTUnwrap(URL(string: "https://atlas-studio.demo.ts.net:5555"))
+        let client = PortOSAPIClient(transport: DemoHTTPTransport())
+
+        let manifest = try await client.paletteManifest(baseURL: baseURL, password: nil)
+        let recent = try XCTUnwrap(manifest.actions.first { $0.id == "brain_list_recent" })
+        XCTAssertTrue(recent.isReader)
+
+        let firstPage = try await client.invokeAction(id: recent.id, arguments: [:], baseURL: baseURL, password: nil)
+        let firstDisplay = ActionResultDisplay(result: firstPage.result, envelopeOK: firstPage.ok)
+        XCTAssertEqual(firstDisplay.rows.count, DemoFixtures.defaultLimit)
+        XCTAssertEqual(firstDisplay.rows.first?.title, DemoFixtures.brainEntries.first?.text)
+
+        let widened = try await client.invokeAction(
+            id: recent.id,
+            arguments: ["limit": .number(10)],
+            baseURL: baseURL,
+            password: nil
+        )
+        XCTAssertEqual(ActionResultDisplay(result: widened.result, envelopeOK: widened.ok).rows.count, 10)
+    }
+
     func testDemoTransportRejectsUnknownRoutes() async throws {
         let url = try XCTUnwrap(URL(string: "https://atlas-studio.demo.ts.net:5555/not-a-demo-route"))
         let (_, response) = try await DemoHTTPTransport().data(for: URLRequest(url: url))

@@ -54,7 +54,7 @@ struct ActionsView: View {
                                         .padding(.horizontal, 4)
                                     ForEach(actions) { action in
                                         NavigationLink {
-                                            ActionFormView(action: action, instance: selectedInstance!)
+                                            ActionDetailView(action: action, instance: selectedInstance!)
                                         } label: {
                                             ActionRow(action: action)
                                         }
@@ -143,13 +143,24 @@ private struct ActionRow: View {
     let action: PaletteAction
 
     var body: some View {
+        let presentation = action.presentation
         PortPanel {
             HStack(spacing: 12) {
-                Image(systemName: action.destructive == true ? "exclamationmark.triangle" : "bolt.fill")
-                    .foregroundStyle(action.destructive == true ? Color.portWarning : Color.portViolet)
+                Image(systemName: presentation.icon)
+                    .foregroundStyle(presentation.tint)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(action.label).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                    HStack(spacing: 6) {
+                        Text(action.label).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                        if action.isReader {
+                            Text("LIVE")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Color.portAccent)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.portAccent.opacity(0.12), in: Capsule())
+                        }
+                    }
                     if !action.description.isEmpty {
                         Text(action.description).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                     }
