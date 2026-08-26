@@ -113,6 +113,9 @@ struct DemoHTTPTransport: HTTPTransport {
         let method = request.httpMethod ?? "GET"
         if method == "GET", path == "/api/system/health" { return (200, healthBody(for: request.url?.host)) }
         if method == "GET", path == "/api/instances" { return (200, topologyBody) }
+        if method == "GET", path == "/api/remote-desktop/status" {
+            return (200, #"{"supported":true,"configured":true,"available":false,"requiresPortOSAuth":true,"platform":"darwin","port":5900,"setupCommand":"npm run setup:remote-desktop"}"#)
+        }
         if method == "GET", path == "/api/palette/manifest" { return (200, Self.manifestBody) }
         if method == "PUT", path == "/api/instances/self" {
             return (200, #"{"instanceId":"portos-atlas","name":"Atlas Studio","defaultPeerFullSync":false}"#)

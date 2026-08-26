@@ -17,6 +17,7 @@ The server remains authoritative for federation, action definitions, Brain data,
 | Surface | Job | Source of truth |
 | --- | --- | --- |
 | Fleet | Connect, identify, select, and manage PortOS instances and federation peers | SwiftData profiles + `/api/system/health` + `/api/instances` |
+| Remote Desktop | View and control one configured machine without exposing another client credential | `/api/remote-desktop/*` + short-lived noVNC/RFB bridge |
 | Capture | Send text or device-transcribed speech to Brain or Daily Log | `/api/palette/action/*` + `/api/brain/daily-log/*` |
 | Actions | Render and invoke the current palette-safe server capability set | `/api/palette/manifest` |
 | Settings | Control optional iCloud sync and explain transport, privacy, and project identity | Local preference + iCloud Keychain |
@@ -42,6 +43,8 @@ When iCloud sync is enabled, PortDeck writes a compact fleet-profile index and e
 - Fleet metadata may use an app-scoped synchronizable Keychain item after the same opt-in. Brain entries, Daily Logs, action payloads, and POST content are never included in that fleet sync.
 - HTTP exists only to support the documented private-tailnet deployment shape. HTTPS still uses normal system trust; self-signed trust bypasses are intentionally absent.
 - Peer credentials entered while creating a federation peer are sent to the selected PortOS server's existing federation credential store and are not retained by PortDeck.
+- Remote desktop is available only when the PortOS instance password gate is enabled. The separate VNC password stays inside the non-persistent viewer and is not written to Keychain, SwiftData, or PortOS's REST API.
+- Viewer paths must be relative `/remote-desktop` URLs and are rebuilt on the configured instance origin. PortDeck rejects a server response that attempts to navigate the embedded viewer to another origin.
 
 ## Audio boundary
 

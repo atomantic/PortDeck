@@ -8,6 +8,10 @@ struct InstanceDetailView: View {
     @Bindable var instance: PortOSInstance
 
     @State private var topology: PortOSTopology?
+    @State private var remoteDesktopStatus: RemoteDesktopStatus?
+    @State private var remoteDesktopMessage: String?
+    @State private var isStartingRemoteDesktop = false
+    @State private var remoteDesktopDestination: RemoteDesktopDestination?
     @State private var isRefreshing = false
     @State private var busyPeerID: String?
     @State private var message: String?
@@ -22,6 +26,7 @@ struct InstanceDetailView: View {
                 identityHeader
                 if let message { InlineMessage(text: message, kind: .error) }
                 connectionPanel
+                remoteDesktopPanel
                 federationPanel
                 managementPanel
             }
@@ -47,6 +52,9 @@ struct InstanceDetailView: View {
         }
         .sheet(isPresented: $showingAddPeer) {
             AddFederationPeerView(instance: instance) { Task { await refresh() } }
+        }
+        .fullScreenCover(item: $remoteDesktopDestination) { destination in
+            RemoteDesktopView(destination: destination)
         }
         .confirmationDialog(
             "Remove \(instance.displayName)?",
@@ -161,6 +169,65 @@ struct InstanceDetailView: View {
         }
     }
 
+    private var remoteDesktopPanel: some View {
+        PortPanel {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Label("Remote Desktop", systemImage: "rectangle.connected.to.line.below")
+                        .font(.headline)
+                    Spacer()
+                    if remoteDesktopStatus?.available == true {
+                        Label("Ready", systemImage: "checkmark.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.portOnline)
+                    }
+                }
+
+                if let remoteDesktopMessage {
+                    Text(remoteDesktopMessage)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else if let status = remoteDesktopStatus {
+                    if status.available {
+                        Text("View and control this machine through its PortOS connection. The separate VNC password is entered after the viewer opens.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if status.requiresPortOSAuth {
+                        Text("Set an instance password in PortOS, save it in this connection, then refresh. Remote desktop sessions are disabled on passwordless instances.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if !status.configured {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("The VNC host service is not configured on this machine.")
+                            Text(status.setupCommand)
+                                .font(.caption.monospaced())
+                                .textSelection(.enabled)
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+                } else if isRefreshing {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("Checking remote desktop…")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+
+                Button { Task { await startRemoteDesktop() } } label: {
+                    HStack {
+                        if isStartingRemoteDesktop { ProgressView().controlSize(.small) }
+                        Label("Open Remote Desktop", systemImage: "rectangle.inset.filled.and.person.filled")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(remoteDesktopStatus?.available != true || isStartingRemoteDesktop)
+            }
+        }
+    }
+
     private var managementPanel: some View {
         PortPanel {
             VStack(spacing: 10) {
@@ -212,10 +279,43 @@ struct InstanceDetailView: View {
             let password = try appState.credentials.password(for: instance.localID)
             if health.authRequired && (password?.isEmpty ?? true) { throw PortOSAPIError.authenticationRequired }
             topology = try await appState.api.topology(baseURL: baseURL, password: password)
+            await refreshRemoteDesktop(baseURL: baseURL, password: password)
             try modelContext.save()
         } catch {
             instance.markFailure(error)
             message = error.localizedDescription
+        }
+    }
+
+    @MainActor
+    private func refreshRemoteDesktop(baseURL: URL, password: String?) async {
+        do {
+            remoteDesktopStatus = try await appState.api.remoteDesktopStatus(baseURL: baseURL, password: password)
+            remoteDesktopMessage = nil
+        } catch PortOSAPIError.server(let status, _) where status == 404 {
+            remoteDesktopStatus = nil
+            remoteDesktopMessage = "Update PortOS on this machine to add remote desktop support."
+        } catch {
+            remoteDesktopStatus = nil
+            remoteDesktopMessage = "Remote desktop status is unavailable: \(error.localizedDescription)"
+        }
+    }
+
+    @MainActor
+    private func startRemoteDesktop() async {
+        guard !isStartingRemoteDesktop, let baseURL = instance.baseURL else { return }
+        isStartingRemoteDesktop = true
+        remoteDesktopMessage = nil
+        defer { isStartingRemoteDesktop = false }
+        do {
+            let password = try appState.credentials.password(for: instance.localID)
+            let session = try await appState.api.createRemoteDesktopSession(baseURL: baseURL, password: password)
+            remoteDesktopDestination = RemoteDesktopDestination(
+                instanceName: instance.displayName,
+                url: try session.viewerURL(relativeTo: baseURL)
+            )
+        } catch {
+            remoteDesktopMessage = error.localizedDescription
         }
     }
 

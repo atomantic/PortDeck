@@ -17,6 +17,7 @@ The app is now fleet-first. It connects directly to one or more PortOS instances
 - Optionally sync fleet profiles and passwords between the user's devices through iCloud Keychain
 - Inspect the active server's federation topology
 - Add, connect, probe, sync, enable/disable, full-mirror, and remove federation peers
+- View and control a configured PortOS machine through a full-screen VNC session with touch pointer and software-keyboard controls
 - Capture typed or on-device dictated text to Brain and Daily Log
 - Load `/api/palette/manifest` and generate native forms for the server's palette-safe actions
 - Open read-only actions (recent Brain entries, goals, PM2 status, calendar, …) as live pages that fetch on open, render the returned records, and widen the window by parameter or by scrolling
@@ -49,6 +50,16 @@ The previous Recall session-recording, audio-retention, analysis, and memory-ext
 6. If PortOS reports that auth is enabled, enter that instance's PortOS password. It is written to this device's Keychain by default.
 7. To share fleet profiles and passwords with another device on the same Apple Account, enable **Sync fleet and passwords** in Settings. This is optional and requires iCloud Keychain on each participating device.
 
+### Remote desktop host setup
+
+Remote desktop requires the PortOS instance password gate and a local VNC server. On each PortOS machine, run:
+
+```bash
+npm run setup:remote-desktop
+```
+
+On macOS, enable **Remote Management** and **VNC viewers may control screen with password** when System Settings opens. Use a unique VNC password—not the macOS login or PortOS instance password. PortDeck asks for that password inside the viewer and does not store it. PortOS creates a short-lived viewer token and proxies the session only to its loopback VNC port.
+
 For HTTP tailnet endpoints, PortDeck deliberately permits dynamic cleartext hosts through App Transport Security; iOS cannot express arbitrary user-entered MagicDNS names as static exception domains. For HTTPS, use a certificate trusted by iOS (the PortOS Tailscale certificate path). PortDeck does not bypass TLS validation for self-signed certificates.
 
 ## Development
@@ -76,7 +87,7 @@ See [docs/PORTDECK_DESIGN.md](docs/PORTDECK_DESIGN.md) for the product structure
 
 ## Demo data and App Store screenshots
 
-Add the `-demo-data` launch argument in Xcode to run PortDeck with a deterministic, in-memory fleet. Demo mode contains three connected PortOS instances, federation peers, capture text, and palette actions. It uses a simulated API transport and no-op credential/cloud stores, so it does not contact the network, Keychain, or iCloud.
+Add the `-demo-data` launch argument in Xcode to run PortDeck with a deterministic, in-memory fleet. Demo mode contains three connected PortOS instances, federation peers, remote-desktop status, capture text, and palette actions. It uses a simulated API transport and no-op credential/cloud stores, so it does not contact the network, Keychain, or iCloud.
 
 The screenshot workflow is adapted from MortalLoom and automatically selects installed App Store-sized iPhone and iPad simulators:
 

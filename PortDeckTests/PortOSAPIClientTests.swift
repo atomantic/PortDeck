@@ -74,6 +74,21 @@ final class PortOSAPIClientTests: XCTestCase {
         XCTAssertEqual(args["text"] as? String, "Remember milk")
     }
 
+    func testRemoteDesktopSessionUsesAuthenticatedInstanceEndpoint() async throws {
+        let transport = MockTransport(statusCode: 201, body: """
+        { "viewerPath": "/remote-desktop?token=example-token", "expiresAt": "2030-01-01T00:00:00Z" }
+        """)
+        let client = PortOSAPIClient(transport: transport)
+
+        _ = try await client.createRemoteDesktopSession(baseURL: baseURL, password: "secret")
+
+        let request = await transport.capturedRequest
+        XCTAssertEqual(request?.httpMethod, "POST")
+        XCTAssertEqual(request?.url?.path, "/api/remote-desktop/sessions")
+        let expected = Data(":secret".utf8).base64EncodedString()
+        XCTAssertEqual(request?.value(forHTTPHeaderField: "Authorization"), "Basic \(expected)")
+    }
+
     func testCancellationIsNotConvertedToUnreachable() async {
         let client = PortOSAPIClient(transport: CancellationTransport())
 
