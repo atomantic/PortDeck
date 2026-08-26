@@ -41,6 +41,20 @@ struct PortOSAPIClient: Sendable {
         try await request(baseURL: baseURL, path: "/api/instances", password: password)
     }
 
+    func remoteDesktopStatus(baseURL: URL, password: String?) async throws -> RemoteDesktopStatus {
+        try await request(baseURL: baseURL, path: "/api/remote-desktop/status", password: password)
+    }
+
+    func createRemoteDesktopSession(baseURL: URL, password: String?) async throws -> RemoteDesktopSession {
+        try await request(
+            baseURL: baseURL,
+            path: "/api/remote-desktop/sessions",
+            method: "POST",
+            password: password,
+            body: Data("{}".utf8)
+        )
+    }
+
     func paletteManifest(baseURL: URL, password: String?) async throws -> PaletteManifest {
         try await request(baseURL: baseURL, path: "/api/palette/manifest", password: password)
     }

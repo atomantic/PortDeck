@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00040F9156EEEBD0195FD15C /* RemoteDesktopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A31BCAC6D377780A03C5578 /* RemoteDesktopView.swift */; };
 		0273C1FE0888B2E0D55CD108 /* PortOSAPIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A3090AE0C4E1E1A0F60180 /* PortOSAPIModels.swift */; };
 		06D1F82A8D5257FF2A7D6ED3 /* PaletteActionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86E88594C42166D3ECB87D6 /* PaletteActionFixture.swift */; };
 		13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */; };
 		194E28D3B05B25A731C58633 /* ActionResultDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B002FBB64F5EC7DA4E9A5F /* ActionResultDisplayTests.swift */; };
 		285A90F7A74B59972111F181 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */; };
+		2DEEE2B6E5E8764BA6081D71 /* RemoteDesktopModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26864D4ADC4EC690C71FE2C /* RemoteDesktopModels.swift */; };
 		2FCA12300425B2032BD533B9 /* PaletteActionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637E6F7C238853530DC34070 /* PaletteActionPresentation.swift */; };
 		30E740B8D8D24AFDDCBD46F7 /* KeychainCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FDAB0A6119E7E7638D040A3 /* KeychainCredentialStore.swift */; };
 		34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4483786345517DFB11EE9B4B /* EditInstanceView.swift */; };
@@ -32,6 +34,7 @@
 		7A65B8708EBBFC3FBFBF22D0 /* ActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D21C9316738833CCC1EE04F /* ActionsView.swift */; };
 		7BA083E465405BA3B7EDC773 /* PortOSEndpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6914ECD585B8071A96C79116 /* PortOSEndpointTests.swift */; };
 		90456A6F3931504957C2A1C5 /* FleetSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */; };
+		91E8DA096FD594AAF3A1F9F2 /* RemoteDesktopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34707BD66F8DF58AA9649363 /* RemoteDesktopTests.swift */; };
 		9934CC918B9C43A6F20BECDA /* PortDeckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFA00746B1E54D68DE886E0 /* PortDeckUITests.swift */; };
 		9F407D30765E935C170DBB8C /* PortOSAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35688402A5D83A178118FE9E /* PortOSAPIClient.swift */; };
 		A7D04ACD6D4DD72891CB0909 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99D3575365329B47833DA9B /* AppShellView.swift */; };
@@ -83,6 +86,7 @@
 		3193777185FA502A6EE376EC /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		333823276F9D322F0D7EDCDC /* PortOSInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSInstance.swift; sourceTree = "<group>"; };
 		34429E825AA3AE3B5901EC9B /* DictationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationController.swift; sourceTree = "<group>"; };
+		34707BD66F8DF58AA9649363 /* RemoteDesktopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktopTests.swift; sourceTree = "<group>"; };
 		35688402A5D83A178118FE9E /* PortOSAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSAPIClient.swift; sourceTree = "<group>"; };
 		379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetSyncCoordinatorTests.swift; sourceTree = "<group>"; };
 		4483786345517DFB11EE9B4B /* EditInstanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditInstanceView.swift; sourceTree = "<group>"; };
@@ -97,6 +101,7 @@
 		669BEC99B769EE78ECA1A57A /* PortDeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PortDeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		68F63D7F47072332EFA2378C /* DemoDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataTests.swift; sourceTree = "<group>"; };
 		6914ECD585B8071A96C79116 /* PortOSEndpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSEndpointTests.swift; sourceTree = "<group>"; };
+		6A31BCAC6D377780A03C5578 /* RemoteDesktopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktopView.swift; sourceTree = "<group>"; };
 		6B351C0DF26B662D65EFFBB8 /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
 		7E786AF3C07063373E5B5E13 /* ActionParameterForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParameterForm.swift; sourceTree = "<group>"; };
 		8241E58FBED37F4EAFD1A035 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -109,6 +114,7 @@
 		B564B4DDC3A549F757F70833 /* PortOSEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSEndpoint.swift; sourceTree = "<group>"; };
 		B8A1867EA214C668B238800A /* String+FieldName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+FieldName.swift"; sourceTree = "<group>"; };
 		BE28A9A2AD442F01E40A543C /* ICloudFleetSyncStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudFleetSyncStore.swift; sourceTree = "<group>"; };
+		C26864D4ADC4EC690C71FE2C /* RemoteDesktopModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktopModels.swift; sourceTree = "<group>"; };
 		C5407640AB5FFFD230780CCF /* PaletteActionBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteActionBehaviorTests.swift; sourceTree = "<group>"; };
 		C7B1938EA3EDA7D90928CA84 /* Color+Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Brand.swift"; sourceTree = "<group>"; };
 		C7BFBF6AB8FC52931DE0B55F /* ActionResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionResultView.swift; sourceTree = "<group>"; };
@@ -155,6 +161,7 @@
 				DFC59D5552215A6B04E8D411 /* PaletteActionBehavior.swift */,
 				A6A3090AE0C4E1E1A0F60180 /* PortOSAPIModels.swift */,
 				333823276F9D322F0D7EDCDC /* PortOSInstance.swift */,
+				C26864D4ADC4EC690C71FE2C /* RemoteDesktopModels.swift */,
 				606689402D0E38A53C08E727 /* SyncedInstanceProfile.swift */,
 			);
 			path = Models;
@@ -181,6 +188,7 @@
 				4483786345517DFB11EE9B4B /* EditInstanceView.swift */,
 				549A6DEBA55EB1AE159BCAFC /* FleetView.swift */,
 				222601337C745F82DD4E1962 /* InstanceDetailView.swift */,
+				6A31BCAC6D377780A03C5578 /* RemoteDesktopView.swift */,
 			);
 			path = Fleet;
 			sourceTree = "<group>";
@@ -206,6 +214,7 @@
 				533BA6A44D7B184344EE5515 /* PortOSAPIClientTests.swift */,
 				6914ECD585B8071A96C79116 /* PortOSEndpointTests.swift */,
 				986E5FC9C6C9F4FDAC4504B9 /* PortOSInstanceTests.swift */,
+				34707BD66F8DF58AA9649363 /* RemoteDesktopTests.swift */,
 			);
 			path = PortDeckTests;
 			sourceTree = "<group>";
@@ -429,6 +438,7 @@
 				4713606B18A8D70DA7B763ED /* PortOSAPIClientTests.swift in Sources */,
 				7BA083E465405BA3B7EDC773 /* PortOSEndpointTests.swift in Sources */,
 				3469DBA19350C02B39FA4163 /* PortOSInstanceTests.swift in Sources */,
+				91E8DA096FD594AAF3A1F9F2 /* RemoteDesktopTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,6 +475,8 @@
 				EE8AF231B8AF215492D03C55 /* PortOSEndpoint.swift in Sources */,
 				7197775C4DF1B5DB25D0C06E /* PortOSInstance.swift in Sources */,
 				F9311F126974EC79CE2E8A19 /* PortPanel.swift in Sources */,
+				2DEEE2B6E5E8764BA6081D71 /* RemoteDesktopModels.swift in Sources */,
+				00040F9156EEEBD0195FD15C /* RemoteDesktopView.swift in Sources */,
 				74F571E758B853407B69983B /* SettingsView.swift in Sources */,
 				4A663AD4CBD04396300218AA /* String+FieldName.swift in Sources */,
 				3D0905D1727A8793E6308241 /* SyncedInstanceProfile.swift in Sources */,
