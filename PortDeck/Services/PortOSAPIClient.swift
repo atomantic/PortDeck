@@ -92,6 +92,30 @@ struct PortOSAPIClient: Sendable {
         )
     }
 
+    func assignableInstances(baseURL: URL, password: String?) async throws -> AssignableInstancesResponse {
+        try await request(baseURL: baseURL, path: "/api/instances/assignable", password: password)
+    }
+
+    func createTask(
+        description: String,
+        targetInstanceID: String?,
+        baseURL: URL,
+        password: String?
+    ) async throws -> CreatedTask {
+        let body = try encoder.encode(CreateTaskRequest(
+            description: description,
+            type: "user",
+            targetInstanceID: targetInstanceID
+        ))
+        return try await request(
+            baseURL: baseURL,
+            path: "/api/cos/tasks",
+            method: "POST",
+            password: password,
+            body: body
+        )
+    }
+
     func renameSelf(name: String, baseURL: URL, password: String?) async throws -> PortOSIdentity {
         let body = try encoder.encode(RenameRequest(name: name))
         return try await request(
@@ -243,4 +267,14 @@ struct PortOSAPIClient: Sendable {
 private struct ActionRequest: Encodable { let args: [String: JSONValue] }
 private struct DailyLogRequest: Encodable { let text: String; let source: String }
 private struct RenameRequest: Encodable { let name: String }
+private struct CreateTaskRequest: Encodable {
+    let description: String
+    let type: String
+    let targetInstanceID: String?
+
+    enum CodingKeys: String, CodingKey {
+        case description, type
+        case targetInstanceID = "targetInstanceId"
+    }
+}
 private struct ServerErrorEnvelope: Decodable { let error: String?; let message: String? }

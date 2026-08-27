@@ -19,10 +19,11 @@ The server remains authoritative for federation, action definitions, Brain data,
 | Fleet | Connect, identify, select, and manage PortOS instances and federation peers | SwiftData profiles + `/api/system/health` + `/api/instances` |
 | Remote Desktop | View and control one configured machine without exposing another client credential | `/api/remote-desktop/*` + short-lived noVNC/RFB bridge |
 | Capture | Send text or device-transcribed speech to Brain or Daily Log | `/api/palette/action/*` + `/api/brain/daily-log/*` |
+| Tasks | Queue a user task on one profile, optionally pinned to one assignable federated runner | `/api/instances/assignable` + `/api/cos/tasks` |
 | Actions | Render and invoke the current palette-safe server capability set | `/api/palette/manifest` |
 | Settings | Control optional iCloud sync and explain transport, privacy, and project identity | Local preference + iCloud Keychain |
 
-The selected Fleet instance is the explicit destination for both Capture and Actions. PortDeck never fans a mutation out to every server implicitly.
+The selected Fleet instance is the explicit destination for Capture, Tasks, and Actions. PortDeck never fans a mutation out to every server implicitly. Tasks add a second, server-scoped choice: an optional assignable runner ID advertised by the selected profile. That ID is not a PortDeck profile UUID. A successful create means queued, not force-spawned or completed, and task descriptions and history are not persisted by PortDeck.
 
 ## Connection lifecycle
 

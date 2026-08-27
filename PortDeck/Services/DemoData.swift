@@ -10,6 +10,7 @@ enum DemoMode {
 enum DemoData {
     static let primaryInstanceID = UUID(uuidString: "A7100000-0000-4000-8000-000000000001")!
     static let captureText = "Capture the federation rollout notes and turn them into tomorrow's priorities."
+    static let taskDescription = "Prepare the federation rollout checklist for tomorrow."
 
     static func seed(modelContext: ModelContext) throws {
         guard try modelContext.fetch(FetchDescriptor<PortOSInstance>()).isEmpty else { return }
@@ -113,6 +114,9 @@ struct DemoHTTPTransport: HTTPTransport {
         let method = request.httpMethod ?? "GET"
         if method == "GET", path == "/api/system/health" { return (200, healthBody(for: request.url?.host)) }
         if method == "GET", path == "/api/instances" { return (200, topologyBody) }
+        if method == "GET", path == "/api/instances/assignable" {
+            return (200, assignableBody(for: request.url?.host))
+        }
         if method == "GET", path == "/api/remote-desktop/status" {
             return (200, #"{"supported":true,"configured":true,"available":false,"requiresPortOSAuth":true,"platform":"darwin","port":5900,"setupCommand":"npm run setup:remote-desktop"}"#)
         }
@@ -126,6 +130,13 @@ struct DemoHTTPTransport: HTTPTransport {
         }
         if method == "POST", path.hasPrefix("/api/brain/daily-log/"), path.hasSuffix("/append") {
             return (200, #"{"date":"2026-07-16","entry":{"ok":true,"summary":"Added to the daily log."}}"#)
+        }
+        if method == "POST", path == "/api/cos/tasks" {
+            let body = String(data: request.httpBody ?? Data(), encoding: .utf8) ?? ""
+            if body.contains("[demo error]") {
+                return (409, #"{"error":"DUPLICATE_TASK","message":"A matching task is already pending"}"#)
+            }
+            return (200, #"{"id":"demo-task-001","status":"pending"}"#)
         }
         if method == "DELETE", path.hasPrefix("/api/instances/peers/") {
             return (200, #"{"ok":true}"#)
@@ -202,6 +213,17 @@ struct DemoHTTPTransport: HTTPTransport {
             return #"{"status":"ok","version":"1.8.0","hostname":"field-kit","instanceId":"portos-field","name":"Field Kit","authRequired":false,"scheme":"https"}"#
         default:
             return #"{"status":"ok","version":"1.8.0","hostname":"atlas-studio","instanceId":"portos-atlas","name":"Atlas Studio","authRequired":false,"scheme":"https"}"#
+        }
+    }
+
+    private func assignableBody(for host: String?) -> String {
+        switch host {
+        case "home-lab.demo.ts.net":
+            #"{"instances":[{"instanceId":"portos-home","name":"Home Lab","isSelf":true},{"instanceId":"portos-atlas","name":"Atlas Studio","isSelf":false}]}"#
+        case "field-kit.demo.ts.net":
+            #"{"instances":[{"instanceId":"portos-field","name":"Field Kit","isSelf":true}]}"#
+        default:
+            #"{"instances":[{"instanceId":"portos-atlas","name":"Atlas Studio","isSelf":true},{"instanceId":"portos-home","name":"Home Lab","isSelf":false},{"instanceId":"portos-field","name":"Field Kit","isSelf":false}]}"#
         }
     }
 

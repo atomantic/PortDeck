@@ -16,6 +16,10 @@ struct AppShellView: View {
                     .tabItem { Label("Capture", systemImage: "waveform.and.mic") }
                     .tag(AppTab.capture)
 
+                TasksView()
+                    .tabItem { Label("Tasks", systemImage: "checklist") }
+                    .tag(AppTab.tasks)
+
                 ActionsView()
                     .tabItem { Label("Actions", systemImage: "square.grid.2x2") }
                     .tag(AppTab.actions)
