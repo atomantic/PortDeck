@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
@@ -8,6 +9,10 @@ struct SettingsView: View {
     @State private var syncMessage: String?
     @State private var syncFailed = false
     @State private var showingOfflineDemo = false
+    @State private var reminderMessage: String?
+    @State private var reminderFailed = false
+    @State private var isUpdatingReminder = false
+    @State private var reminderRescheduleTask: Task<Void, Never>?
 
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
@@ -31,6 +36,41 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                }
+
+                if !appState.isOfflineDemo {
+                    Section {
+                        Toggle("Daily Log reminder", isOn: Binding(
+                            get: { appState.dailyLogReminderEnabled },
+                            set: { updateDailyLogReminderEnabled($0) }
+                        ))
+                        .disabled(isUpdatingReminder)
+
+                        if appState.dailyLogReminderEnabled {
+                            DatePicker(
+                                "Reminder time",
+                                selection: Binding(
+                                    get: { appState.dailyLogReminderTime },
+                                    set: { updateDailyLogReminderTime($0) }
+                                ),
+                                displayedComponents: .hourAndMinute
+                            )
+                        }
+
+                        if let reminderMessage {
+                            InlineMessage(text: reminderMessage, kind: reminderFailed ? .error : .success)
+                        }
+
+                        if appState.dailyLogReminderAuthorization == .denied {
+                            Link(destination: URL(string: UIApplication.openSettingsURLString)!) {
+                                Label("Open notification settings", systemImage: "gear")
+                            }
+                        }
+                    } header: {
+                        Text("Daily Log")
+                    } footer: {
+                        Text("PortOS can remind you at the same time every day. Tapping the alert opens Capture with Daily Log selected.")
+                    }
                 }
 
                 Section {
@@ -110,6 +150,47 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .fullScreenCover(isPresented: $showingOfflineDemo) { OfflineDemoView() }
+            .task { await appState.refreshDailyLogReminderAuthorization() }
+            .onDisappear { reminderRescheduleTask?.cancel() }
+        }
+    }
+
+    private func updateDailyLogReminderEnabled(_ enabled: Bool) {
+        isUpdatingReminder = true
+        reminderMessage = nil
+        Task {
+            defer { isUpdatingReminder = false }
+            do {
+                try await appState.setDailyLogReminderEnabled(enabled)
+                reminderFailed = false
+                reminderMessage = enabled
+                    ? "Daily reminder set for \(appState.dailyLogReminderTime.formatted(date: .omitted, time: .shortened))."
+                    : "Daily reminder turned off."
+            } catch {
+                reminderFailed = true
+                reminderMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func updateDailyLogReminderTime(_ time: Date) {
+        appState.setDailyLogReminderTime(time)
+        reminderMessage = nil
+        reminderRescheduleTask?.cancel()
+        reminderRescheduleTask = Task {
+            do {
+                try await Task.sleep(for: .milliseconds(300))
+                try Task.checkCancellation()
+                try await appState.rescheduleDailyLogReminder()
+                reminderFailed = false
+                reminderMessage = "Daily reminder moved to \(appState.dailyLogReminderTime.formatted(date: .omitted, time: .shortened))."
+            } catch is CancellationError {
+                return
+            } catch {
+                reminderFailed = true
+                reminderMessage = error.localizedDescription
+                await appState.refreshDailyLogReminderAuthorization()
+            }
         }
     }
 

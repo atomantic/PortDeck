@@ -5,20 +5,12 @@ struct CaptureView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \PortOSInstance.addedAt) private var instances: [PortOSInstance]
 
-    @State private var destination = CaptureDestination.brain
     @State private var text = DemoMode.isEnabled ? DemoData.captureText : ""
     @State private var selectedDate = Date()
     @State private var dictation = DictationController()
     @State private var usedDictation = false
     @State private var isSubmitting = false
     @State private var message: (String, InlineMessage.Kind)?
-
-    private enum CaptureDestination: String, CaseIterable, Identifiable {
-        case brain = "Brain"
-        case dailyLog = "Daily Log"
-        var id: String { rawValue }
-        var icon: String { self == .brain ? "brain.head.profile" : "book.pages" }
-    }
 
     private var selectedInstance: PortOSInstance? {
         instances.first { $0.localID == appState.selectedInstanceID } ?? instances.first
@@ -52,14 +44,17 @@ struct CaptureView: View {
     private var captureComposer: some View {
         PortPanel {
             VStack(alignment: .leading, spacing: 16) {
-                Picker("Destination", selection: $destination) {
+                Picker("Destination", selection: Binding(
+                    get: { appState.captureDestination },
+                    set: { appState.captureDestination = $0 }
+                )) {
                     ForEach(CaptureDestination.allCases) { destination in
                         Label(destination.rawValue, systemImage: destination.icon).tag(destination)
                     }
                 }
                 .pickerStyle(.segmented)
 
-                if destination == .dailyLog {
+                if appState.captureDestination == .dailyLog {
                     DatePicker("Log date", selection: $selectedDate, displayedComponents: .date)
                         .datePickerStyle(.compact)
                 }
@@ -71,7 +66,7 @@ struct CaptureView: View {
                         .frame(minHeight: 210)
                         .background(Color.portCanvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     if text.isEmpty {
-                        Text(destination == .brain
+                        Text(appState.captureDestination == .brain
                              ? "Capture a thought, idea, reminder, or note…"
                              : "What happened today?")
                             .foregroundStyle(.tertiary)
@@ -139,7 +134,7 @@ struct CaptureView: View {
         defer { isSubmitting = false }
         do {
             let password = try appState.credentials.password(for: instance.localID)
-            switch destination {
+            switch appState.captureDestination {
             case .brain:
                 let response = try await appState.api.invokeAction(
                     id: "brain_capture",
