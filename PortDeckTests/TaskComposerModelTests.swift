@@ -36,7 +36,7 @@ final class TaskComposerModelTests: XCTestCase {
         XCTAssertEqual(model.selectedTargetID, "shared-runner")
         XCTAssertEqual(model.selectedTargetName, "Shared")
         XCTAssertNotNil(model.lookupError)
-        XCTAssertFalse(model.canSubmit)
+        XCTAssertFalse(model.canSubmit(to: home.localID))
     }
 
     func testLookupFailureStillAllowsAnUnpinnedTask() async {
@@ -47,7 +47,7 @@ final class TaskComposerModelTests: XCTestCase {
         await model.load(for: home, api: PortOSAPIClient(transport: transport), credentials: TestCredentialStore())
         model.description = "Queue without a runner pin"
 
-        XCTAssertTrue(model.canSubmit)
+        XCTAssertTrue(model.canSubmit(to: home.localID))
         await model.submit(to: home, api: PortOSAPIClient(transport: transport), credentials: TestCredentialStore())
 
         XCTAssertEqual(model.createdTask?.id, "created-1")
@@ -91,8 +91,8 @@ final class TaskComposerModelTests: XCTestCase {
         XCTAssertEqual(posts.count, 1)
     }
 
-    func testProfileSwitchDiscardsStaleSubmitResultWithoutClearingNewDraft() async throws {
-        let transport = RoutingTaskTransport(postDelayNanoseconds: 100_000_000)
+    func testProfileSwitchShowsPriorSubmitResultWithoutClearingNewDraft() async {
+        let transport = RoutingTaskTransport(suspendPosts: true)
         let model = TaskComposerModel()
         let api = PortOSAPIClient(transport: transport)
         let atlas = makeInstance(id: atlasID, host: "atlas.example", serverID: "atlas")
@@ -103,13 +103,15 @@ final class TaskComposerModelTests: XCTestCase {
         let submission = Task {
             await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
         }
-        try await Task.sleep(nanoseconds: 20_000_000)
+        await transport.waitUntilPostStarts()
         model.description = "New profile draft"
         await model.load(for: home, api: api, credentials: TestCredentialStore())
+        await transport.releasePost()
         await submission.value
 
         XCTAssertEqual(model.description, "New profile draft")
-        XCTAssertNil(model.createdTask)
+        XCTAssertEqual(model.createdTask?.id, "created-1")
+        XCTAssertEqual(model.createdTaskProfileName, "atlas.example")
         XCTAssertNil(model.submissionError)
         let posts = await transport.posts
         XCTAssertEqual(posts.count, 1)
@@ -166,16 +168,29 @@ private actor RoutingTaskTransport: HTTPTransport {
     private(set) var posts: [Post] = []
     private let failingHost: String?
     private let failPosts: Bool
-    private let postDelayNanoseconds: UInt64
+    private let suspendPosts: Bool
+    private var postStarted = false
+    private var postStartWaiters: [CheckedContinuation<Void, Never>] = []
+    private var postReleaseContinuation: CheckedContinuation<Void, Never>?
 
     init(
         failingHost: String? = nil,
         failPosts: Bool = false,
-        postDelayNanoseconds: UInt64 = 0
+        suspendPosts: Bool = false
     ) {
         self.failingHost = failingHost
         self.failPosts = failPosts
-        self.postDelayNanoseconds = postDelayNanoseconds
+        self.suspendPosts = suspendPosts
+    }
+
+    func waitUntilPostStarts() async {
+        if postStarted { return }
+        await withCheckedContinuation { postStartWaiters.append($0) }
+    }
+
+    func releasePost() {
+        postReleaseContinuation?.resume()
+        postReleaseContinuation = nil
     }
 
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
@@ -194,15 +209,18 @@ private actor RoutingTaskTransport: HTTPTransport {
                 body = #"{"instances":[{"instanceId":"shared-runner","name":"Shared","isSelf":false},{"instanceId":"self","name":"Self","isSelf":true}]}"#
             }
         } else if path == "/api/cos/tasks" {
-            if postDelayNanoseconds > 0 {
-                try await Task.sleep(nanoseconds: postDelayNanoseconds)
-            }
             let json = (try? JSONSerialization.jsonObject(with: request.httpBody ?? Data())) as? [String: Any]
             posts.append(Post(
                 host: host,
                 description: json?["description"] as? String,
                 target: json?["targetInstanceId"] as? String
             ))
+            if suspendPosts {
+                postStarted = true
+                postStartWaiters.forEach { $0.resume() }
+                postStartWaiters.removeAll()
+                await withCheckedContinuation { postReleaseContinuation = $0 }
+            }
             if failPosts {
                 status = 409
                 body = #"{"message":"Duplicate task"}"#

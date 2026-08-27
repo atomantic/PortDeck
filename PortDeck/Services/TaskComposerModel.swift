@@ -20,7 +20,9 @@ final class TaskComposerModel {
     private(set) var isSubmitting = false
     private(set) var lookupError: String?
     private(set) var submissionError: String?
+    private(set) var submissionProfileName: String?
     private(set) var createdTask: CreatedTask?
+    private(set) var createdTaskProfileName: String?
 
     private var loadedProfileID: UUID?
     private var currentProfileID: UUID?
@@ -28,10 +30,11 @@ final class TaskComposerModel {
     private var submitID = UUID()
     private var retainedTargetName: String?
 
-    var canSubmit: Bool {
+    func canSubmit(to profileID: UUID?) -> Bool {
         !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !isLoading
             && !isSubmitting
+            && currentProfileID == profileID
             && (selectedTargetID == nil || selectedTargetIsValidated)
     }
 
@@ -47,13 +50,14 @@ final class TaskComposerModel {
         let requestID = UUID()
         lookupID = requestID
         currentProfileID = instance.localID
-        submitID = UUID()
         isSubmitting = false
         loadedProfileID = nil
         assignableInstances = []
         lookupError = nil
         submissionError = nil
+        submissionProfileName = nil
         createdTask = nil
+        createdTaskProfileName = nil
         isLoading = true
         defer {
             if lookupID == requestID { isLoading = false }
@@ -90,6 +94,7 @@ final class TaskComposerModel {
     ) async {
         let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
         let profileID = instance.localID
+        let profileName = instance.displayName
         guard !trimmed.isEmpty, currentProfileID == profileID, !isSubmitting else { return }
         guard selectedTargetID == nil || (loadedProfileID == profileID && selectedTargetIsValidated) else {
             submissionError = "Reload the available runners before sending this pinned task."
@@ -105,7 +110,9 @@ final class TaskComposerModel {
         let targetInstanceID = selectedTargetID
         isSubmitting = true
         submissionError = nil
+        submissionProfileName = nil
         createdTask = nil
+        createdTaskProfileName = nil
         defer {
             if submitID == requestID { isSubmitting = false }
         }
@@ -118,14 +125,16 @@ final class TaskComposerModel {
                 password: password
             )
             try Task.checkCancellation()
-            guard submitID == requestID, currentProfileID == profileID else { return }
+            guard submitID == requestID else { return }
             createdTask = task
-            description = ""
+            createdTaskProfileName = profileName
+            if currentProfileID == profileID { description = "" }
         } catch is CancellationError {
             return
         } catch {
-            guard submitID == requestID, currentProfileID == profileID else { return }
+            guard submitID == requestID else { return }
             submissionError = error.localizedDescription
+            submissionProfileName = profileName
         }
     }
 

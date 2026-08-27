@@ -87,7 +87,7 @@ struct TasksView: View {
                 if let lookupError = composer.lookupError {
                     if let targetName = composer.selectedTargetName {
                         InlineMessage(
-                            text: "Pinned runner \(targetName) could not be verified for this profile. The task will not be sent unpinned.",
+                            text: "Pinned runner \(targetName) could not be verified. Reload the runner list before queuing this task.",
                             kind: .info
                         )
                     }
@@ -101,10 +101,18 @@ struct TasksView: View {
                 }
 
                 if let submissionError = composer.submissionError {
-                    InlineMessage(text: submissionError, kind: .error)
+                    InlineMessage(
+                        text: composer.submissionProfileName.map { "Could not queue on \($0): \(submissionError)" }
+                            ?? submissionError,
+                        kind: .error
+                    )
                 }
                 if let task = composer.createdTask {
-                    InlineMessage(text: "Queued task \(task.id) · \(task.status)", kind: .success)
+                    InlineMessage(
+                        text: "Queued task \(task.id) · \(task.status)"
+                            + (composer.createdTaskProfileName.map { " on \($0)" } ?? ""),
+                        kind: .success
+                    )
                 }
 
                 Button {
@@ -118,7 +126,7 @@ struct TasksView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(!composer.canSubmit)
+                .disabled(!composer.canSubmit(to: selectedInstance?.localID))
             }
         }
     }

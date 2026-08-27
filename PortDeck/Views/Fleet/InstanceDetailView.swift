@@ -281,6 +281,8 @@ struct InstanceDetailView: View {
             topology = try await appState.api.topology(baseURL: baseURL, password: password)
             await refreshRemoteDesktop(baseURL: baseURL, password: password)
             try modelContext.save()
+        } catch is CancellationError {
+            return
         } catch {
             instance.markFailure(error)
             message = error.localizedDescription
@@ -292,6 +294,8 @@ struct InstanceDetailView: View {
         do {
             remoteDesktopStatus = try await appState.api.remoteDesktopStatus(baseURL: baseURL, password: password)
             remoteDesktopMessage = nil
+        } catch is CancellationError {
+            return
         } catch PortOSAPIError.server(let status, _) where status == 404 {
             remoteDesktopStatus = nil
             remoteDesktopMessage = "Update PortOS on this machine to add remote desktop support."
