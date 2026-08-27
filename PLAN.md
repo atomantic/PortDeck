@@ -8,7 +8,7 @@ PortDeck is the iOS companion for PortOS defined by [PortOS issue #2678](https:/
 
 - [x] Keep `PortDeck` as the technical project/bundle identity and `PortOS` as the App Store display name
 - [x] Replace the Recall information architecture, models, services, and app icon
-- [x] Establish Fleet, Capture, Actions, and Settings as the primary native surfaces
+- [x] Establish Fleet, Capture, Tasks, Actions, and Settings as the primary native surfaces
 - [x] Keep `project.yml` as the generated Xcode project source of truth
 
 ## Completed: instance foundation
@@ -52,6 +52,13 @@ PortDeck is the iOS companion for PortOS defined by [PortOS issue #2678](https:/
 - [ ] Add a `readOnly` flag (and a `hasMore`/`total` result field) to PortOS's `PALETTE_ACTIONS` so PortDeck stops inferring reader vs. writer and end-of-list from id verbs and row-count deltas; keep the client heuristic as the older-peer fallback
 - [ ] Extract the action fetch/page/latch state out of `ActionDetailView` into an `@Observable` runner so paging is unit-testable and reusable by a future dashboard widget
 
+## Completed: native CoS tasks
+
+- [x] Queue a user task on one explicitly selected PortOS profile
+- [x] Load that profile's assignable federated runners and optionally pin by server instance ID
+- [x] Preserve task drafts and routing intent across authentication, connectivity, validation, and duplicate errors
+- [x] Support the Tasks surface in deterministic offline demo mode
+
 ## Next: MeatSpace POST companion
 
 - [ ] Display POST configuration, recommendations, sessions, stats, and progress per instance
@@ -65,6 +72,6 @@ PortDeck is the iOS companion for PortOS defined by [PortOS issue #2678](https:/
 - [x] Add automated iPhone and iPad App Store screenshot capture
 - [x] Align local TestFlight deployment with the MortalLoom release workflow
 - [x] Exercise the full UI and screenshot flows on an updated CoreSimulator runtime
-- [ ] Add accessibility and Dynamic Type snapshots for the four primary surfaces
+- [ ] Add accessibility and Dynamic Type snapshots for the five primary surfaces
 - [ ] Test trusted Tailscale HTTPS and HTTP against multiple physical devices
 - [ ] Decide whether the broad dynamic-host ATS allowance is acceptable for App Review or requires an HTTPS-only distribution posture

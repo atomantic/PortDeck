@@ -36,6 +36,13 @@ final class DemoDataTests: XCTestCase {
             baseURL: baseURL,
             password: nil
         )
+        let assignable = try await client.assignableInstances(baseURL: baseURL, password: nil)
+        let task = try await client.createTask(
+            description: "Prepare the rollout",
+            targetInstanceID: "portos-home",
+            baseURL: baseURL,
+            password: nil
+        )
 
         XCTAssertEqual(topology.peers.count, 2)
         XCTAssertEqual(topology.selfIdentity?.name, "Atlas Studio")
@@ -43,6 +50,23 @@ final class DemoDataTests: XCTestCase {
         XCTAssertTrue(manifest.actions.contains(where: { $0.destructive == true }))
         XCTAssertEqual(action.result.summary, "Action completed on Atlas Studio.")
         XCTAssertEqual(dailyLog.entry.summary, "Added to the daily log.")
+        XCTAssertEqual(assignable.instances.count, 3)
+        XCTAssertEqual(task, CreatedTask(id: "demo-task-001", status: "pending"))
+    }
+
+    func testDemoTaskErrorIsDeterministic() async {
+        let baseURL = URL(string: "https://atlas-studio.demo.ts.net:5555")!
+        do {
+            _ = try await PortOSAPIClient(transport: DemoHTTPTransport()).createTask(
+                description: "[demo error] duplicate",
+                targetInstanceID: nil,
+                baseURL: baseURL,
+                password: nil
+            )
+            XCTFail("Expected demo duplicate error")
+        } catch {
+            XCTAssertEqual(error as? PortOSAPIError, .server(status: 409, message: "A matching task is already pending"))
+        }
     }
 
     func testDemoReaderActionsReturnRenderableEntriesAndHonorTheLimit() async throws {

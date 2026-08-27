@@ -19,6 +19,7 @@ The app is now fleet-first. It connects directly to one or more PortOS instances
 - Add, connect, probe, sync, enable/disable, full-mirror, and remove federation peers
 - View and control a configured PortOS machine through a full-screen VNC session with touch pointer and software-keyboard controls
 - Capture typed or on-device dictated text to Brain and Daily Log
+- Queue a native CoS user task to one configured profile, optionally pinned to a server-advertised federated runner
 - Load `/api/palette/manifest` and generate native forms for the server's palette-safe actions
 - Open read-only actions (recent Brain entries, goals, PM2 status, calendar, …) as live pages that fetch on open, render the returned records, and widen the window by parameter or by scrolling
 - Handle older PortOS health payloads that predate `name` and `authRequired`
@@ -49,6 +50,8 @@ The previous Recall session-recording, audio-retention, analysis, and memory-ext
 5. In the Fleet tab, tap **Add an instance**, choose HTTP or HTTPS, enter the MagicDNS host or Tailscale IP, and keep port `5555` unless that instance is configured differently.
 6. If PortOS reports that auth is enabled, enter that instance's PortOS password. It is written to this device's Keychain by default.
 7. To share fleet profiles and passwords with another device on the same Apple Account, enable **Sync fleet and passwords** in Settings. This is optional and requires iCloud Keychain on each participating device.
+
+The Tasks tab uses the selected profile's credential for `GET /api/instances/assignable` and exactly one `POST /api/cos/tasks`. The profile is the direct HTTP destination; the optional **Run on** value is a PortOS-provided federated `instanceId` inside that profile. **Any instance** omits the pin and leaves normal first-claim routing to PortOS. PortDeck does not broadcast, force-spawn, or persist task descriptions or history.
 
 ### Remote desktop host setup
 
@@ -98,13 +101,13 @@ The screenshot workflow is adapted from MortalLoom and automatically selects ins
 ./take_screenshots.sh --screen 03_capture
 ```
 
-It generates six English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Screenshot output and transient configuration are gitignored.
+It generates eight English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Screenshot output and transient configuration are gitignored.
 
 ## Product identity
 
 - Xcode project and target: `PortDeck`
 - Bundle ID: `net.shadowpuppet.PortDeck`
-- URL scheme: `portdeck://`
+- URL scheme: `portdeck://` (including `portdeck://tasks`)
 - App Store display name: `PortOS`
 - Minimum deployment target: iOS 17.0
 

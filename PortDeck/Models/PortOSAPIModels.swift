@@ -137,6 +137,28 @@ struct DailyLogResponse: Decodable, Sendable {
     let entry: JSONValue
 }
 
+struct AssignableInstance: Codable, Identifiable, Equatable, Sendable {
+    let instanceID: String
+    let name: String
+    let isSelf: Bool
+
+    var id: String { instanceID }
+
+    enum CodingKeys: String, CodingKey {
+        case name, isSelf
+        case instanceID = "instanceId"
+    }
+}
+
+struct AssignableInstancesResponse: Codable, Equatable, Sendable {
+    let instances: [AssignableInstance]
+}
+
+struct CreatedTask: Codable, Equatable, Sendable {
+    let id: String
+    let status: String
+}
+
 enum JSONValue: Codable, Equatable, Sendable {
     case string(String)
     case number(Double)

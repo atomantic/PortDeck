@@ -66,14 +66,19 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["Send"].waitForExistence(timeout: 2))
         saveScreenshot("03_capture")
 
+        selectTab("Tasks")
+        XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.buttons["Queue task"].waitForExistence(timeout: 4))
+        saveScreenshot("04_tasks")
+
         selectTab("Actions")
         XCTAssertTrue(app.staticTexts["Recent Brain entries"].waitForExistence(timeout: 5))
-        saveScreenshot("04_actions")
+        saveScreenshot("05_actions")
 
         app.staticTexts["Recent Brain entries"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Recent Brain entries"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.staticTexts["Last 5 captures."].waitForExistence(timeout: 5))
-        saveScreenshot("05_action_results")
+        saveScreenshot("06_action_results")
 
         app.navigationBars.buttons.element(boundBy: 0).tap()
         let focusSession = app.staticTexts["Start Focus Session"].firstMatch
@@ -81,7 +86,7 @@ final class ScreenshotTests: XCTestCase {
         scrollUntilHittable(focusSession)
         focusSession.tap()
         XCTAssertTrue(app.navigationBars["Start Focus Session"].waitForExistence(timeout: 4))
-        saveScreenshot("06_action_form")
+        saveScreenshot("07_action_form")
 
         selectTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 4))
@@ -89,7 +94,7 @@ final class ScreenshotTests: XCTestCase {
             app.swipeUp()
             Thread.sleep(forTimeInterval: 0.4)
         }
-        saveScreenshot("07_privacy")
+        saveScreenshot("08_privacy")
     }
 
     /// The action list grows as PortOS adds palette entries, so scroll rather than assume

@@ -5,6 +5,7 @@ import SwiftData
 enum AppTab: String, Hashable {
     case fleet
     case capture
+    case tasks
     case actions
     case settings
 }
@@ -101,6 +102,7 @@ final class AppState {
         let destination = url.host ?? url.pathComponents.dropFirst().first
         switch destination {
         case "capture": selectedTab = .capture
+        case "tasks": selectedTab = .tasks
         case "actions": selectedTab = .actions
         case "settings": selectedTab = .settings
         default: selectedTab = .fleet

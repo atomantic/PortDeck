@@ -12,6 +12,7 @@ final class PortDeckUITests: XCTestCase {
 
         XCTAssertTrue(app.tabBars.buttons["Fleet"].exists)
         XCTAssertTrue(app.tabBars.buttons["Capture"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Tasks"].exists)
         XCTAssertTrue(app.tabBars.buttons["Actions"].exists)
         XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
         XCTAssertTrue(app.navigationBars["PortOS Fleet"].exists)
@@ -61,6 +62,16 @@ final class PortDeckUITests: XCTestCase {
         app.tabBars.buttons["Capture"].tap()
 
         XCTAssertTrue(app.navigationBars["Capture"].exists)
+        XCTAssertTrue(app.staticTexts["Add an instance first"].exists)
+    }
+
+    func testTasksExplainsMissingInstance() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UseInMemoryStore"]
+        app.launch()
+        app.tabBars.buttons["Tasks"].tap()
+
+        XCTAssertTrue(app.navigationBars["Tasks"].exists)
         XCTAssertTrue(app.staticTexts["Add an instance first"].exists)
     }
 

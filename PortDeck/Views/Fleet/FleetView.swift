@@ -181,6 +181,8 @@ struct FleetView: View {
                     }
                     throw PortOSAPIError.authenticationRequired
                 }
+            } catch is CancellationError {
+                return
             } catch {
                 instance.markFailure(error)
             }

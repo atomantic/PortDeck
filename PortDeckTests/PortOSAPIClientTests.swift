@@ -89,6 +89,58 @@ final class PortOSAPIClientTests: XCTestCase {
         XCTAssertEqual(request?.value(forHTTPHeaderField: "Authorization"), "Basic \(expected)")
     }
 
+    func testAssignableInstancesUsesAuthenticatedSelectedHostAndEnvelope() async throws {
+        let transport = MockTransport(statusCode: 200, body: """
+        { "instances": [{ "instanceId": "runner-1", "name": "Studio", "isSelf": true }] }
+        """)
+
+        let response = try await PortOSAPIClient(transport: transport)
+            .assignableInstances(baseURL: baseURL, password: "secret")
+
+        XCTAssertEqual(response.instances, [AssignableInstance(instanceID: "runner-1", name: "Studio", isSelf: true)])
+        let request = await transport.capturedRequest
+        XCTAssertEqual(request?.url?.host, "studio.tail123.ts.net")
+        XCTAssertEqual(request?.url?.path, "/api/instances/assignable")
+        XCTAssertEqual(request?.value(forHTTPHeaderField: "Authorization"), "Basic \(Data(":secret".utf8).base64EncodedString())")
+    }
+
+    func testCreateTaskTrimsAtCallerAndPropagatesExactServerTarget() async throws {
+        let transport = MockTransport(statusCode: 200, body: #"{"id":"task-123","status":"pending"}"#)
+
+        let task = try await PortOSAPIClient(transport: transport).createTask(
+            description: "Ship the native composer",
+            targetInstanceID: "server-runner-9",
+            baseURL: baseURL,
+            password: "secret"
+        )
+
+        XCTAssertEqual(task, CreatedTask(id: "task-123", status: "pending"))
+        let request = await transport.capturedRequest
+        XCTAssertEqual(request?.httpMethod, "POST")
+        XCTAssertEqual(request?.url?.path, "/api/cos/tasks")
+        let body = try XCTUnwrap(request?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["description"] as? String, "Ship the native composer")
+        XCTAssertEqual(json["type"] as? String, "user")
+        XCTAssertEqual(json["targetInstanceId"] as? String, "server-runner-9")
+    }
+
+    func testCreateTaskOmitsTargetForAnyInstance() async throws {
+        let transport = MockTransport(statusCode: 200, body: #"{"id":"task-124","status":"pending"}"#)
+
+        _ = try await PortOSAPIClient(transport: transport).createTask(
+            description: "Unpinned work",
+            targetInstanceID: nil,
+            baseURL: baseURL,
+            password: nil
+        )
+
+        let request = await transport.capturedRequest
+        let body = try XCTUnwrap(request?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertNil(json["targetInstanceId"])
+    }
+
     func testCancellationIsNotConvertedToUnreachable() async {
         let client = PortOSAPIClient(transport: CancellationTransport())
 
