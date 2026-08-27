@@ -39,6 +39,23 @@ final class TaskComposerModelTests: XCTestCase {
         XCTAssertFalse(model.canSubmit)
     }
 
+    func testLookupFailureStillAllowsAnUnpinnedTask() async {
+        let transport = RoutingTaskTransport(failingHost: "home.example")
+        let model = TaskComposerModel()
+        let home = makeInstance(id: homeID, host: "home.example", serverID: "home")
+
+        await model.load(for: home, api: PortOSAPIClient(transport: transport), credentials: TestCredentialStore())
+        model.description = "Queue without a runner pin"
+
+        XCTAssertTrue(model.canSubmit)
+        await model.submit(to: home, api: PortOSAPIClient(transport: transport), credentials: TestCredentialStore())
+
+        XCTAssertEqual(model.createdTask?.id, "created-1")
+        let posts = await transport.posts
+        XCTAssertEqual(posts.count, 1)
+        XCTAssertNil(posts.first?.target)
+    }
+
     func testSubmitTrimsOncePostsToSelectedProfileAndClearsOnlyOnSuccess() async throws {
         let transport = RoutingTaskTransport()
         let model = TaskComposerModel()
@@ -72,6 +89,31 @@ final class TaskComposerModelTests: XCTestCase {
         XCTAssertNil(model.createdTask)
         let posts = await transport.posts
         XCTAssertEqual(posts.count, 1)
+    }
+
+    func testProfileSwitchDiscardsStaleSubmitResultWithoutClearingNewDraft() async throws {
+        let transport = RoutingTaskTransport(postDelayNanoseconds: 100_000_000)
+        let model = TaskComposerModel()
+        let api = PortOSAPIClient(transport: transport)
+        let atlas = makeInstance(id: atlasID, host: "atlas.example", serverID: "atlas")
+        let home = makeInstance(id: homeID, host: "home.example", serverID: "home")
+        await model.load(for: atlas, api: api, credentials: TestCredentialStore())
+        model.description = "Old profile task"
+
+        let submission = Task {
+            await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+        }
+        try await Task.sleep(nanoseconds: 20_000_000)
+        model.description = "New profile draft"
+        await model.load(for: home, api: api, credentials: TestCredentialStore())
+        await submission.value
+
+        XCTAssertEqual(model.description, "New profile draft")
+        XCTAssertNil(model.createdTask)
+        XCTAssertNil(model.submissionError)
+        let posts = await transport.posts
+        XCTAssertEqual(posts.count, 1)
+        XCTAssertEqual(posts.first?.host, "atlas.example")
     }
 
     func testTasksDeepLinkSelectsTasksTab() {
@@ -124,10 +166,16 @@ private actor RoutingTaskTransport: HTTPTransport {
     private(set) var posts: [Post] = []
     private let failingHost: String?
     private let failPosts: Bool
+    private let postDelayNanoseconds: UInt64
 
-    init(failingHost: String? = nil, failPosts: Bool = false) {
+    init(
+        failingHost: String? = nil,
+        failPosts: Bool = false,
+        postDelayNanoseconds: UInt64 = 0
+    ) {
         self.failingHost = failingHost
         self.failPosts = failPosts
+        self.postDelayNanoseconds = postDelayNanoseconds
     }
 
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
@@ -146,6 +194,9 @@ private actor RoutingTaskTransport: HTTPTransport {
                 body = #"{"instances":[{"instanceId":"shared-runner","name":"Shared","isSelf":false},{"instanceId":"self","name":"Self","isSelf":true}]}"#
             }
         } else if path == "/api/cos/tasks" {
+            if postDelayNanoseconds > 0 {
+                try await Task.sleep(nanoseconds: postDelayNanoseconds)
+            }
             let json = (try? JSONSerialization.jsonObject(with: request.httpBody ?? Data())) as? [String: Any]
             posts.append(Post(
                 host: host,

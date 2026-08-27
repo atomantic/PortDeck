@@ -23,15 +23,16 @@ final class TaskComposerModel {
     private(set) var createdTask: CreatedTask?
 
     private var loadedProfileID: UUID?
+    private var currentProfileID: UUID?
     private var lookupID = UUID()
+    private var submitID = UUID()
     private var retainedTargetName: String?
 
     var canSubmit: Bool {
         !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !isLoading
             && !isSubmitting
-            && loadedProfileID != nil
-            && selectedTargetIsValidated
+            && (selectedTargetID == nil || selectedTargetIsValidated)
     }
 
     var selectedTargetName: String? {
@@ -45,6 +46,9 @@ final class TaskComposerModel {
     ) async {
         let requestID = UUID()
         lookupID = requestID
+        currentProfileID = instance.localID
+        submitID = UUID()
+        isSubmitting = false
         loadedProfileID = nil
         assignableInstances = []
         lookupError = nil
@@ -85,8 +89,9 @@ final class TaskComposerModel {
         credentials: any CredentialStore
     ) async {
         let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, loadedProfileID == instance.localID else { return }
-        guard selectedTargetIsValidated else {
+        let profileID = instance.localID
+        guard !trimmed.isEmpty, currentProfileID == profileID, !isSubmitting else { return }
+        guard selectedTargetID == nil || (loadedProfileID == profileID && selectedTargetIsValidated) else {
             submissionError = "Reload the available runners before sending this pinned task."
             return
         }
@@ -95,20 +100,31 @@ final class TaskComposerModel {
             return
         }
 
+        let requestID = UUID()
+        submitID = requestID
+        let targetInstanceID = selectedTargetID
         isSubmitting = true
         submissionError = nil
         createdTask = nil
-        defer { isSubmitting = false }
+        defer {
+            if submitID == requestID { isSubmitting = false }
+        }
         do {
-            let password = try credentials.password(for: instance.localID)
-            createdTask = try await api.createTask(
+            let password = try credentials.password(for: profileID)
+            let task = try await api.createTask(
                 description: trimmed,
-                targetInstanceID: selectedTargetID,
+                targetInstanceID: targetInstanceID,
                 baseURL: baseURL,
                 password: password
             )
+            try Task.checkCancellation()
+            guard submitID == requestID, currentProfileID == profileID else { return }
+            createdTask = task
             description = ""
+        } catch is CancellationError {
+            return
         } catch {
+            guard submitID == requestID, currentProfileID == profileID else { return }
             submissionError = error.localizedDescription
         }
     }

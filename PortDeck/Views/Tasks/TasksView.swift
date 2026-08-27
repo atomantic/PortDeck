@@ -45,6 +45,7 @@ struct TasksView: View {
 
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $composer.description)
+                        .accessibilityLabel("Task description")
                         .scrollContentBackground(.hidden)
                         .padding(8)
                         .frame(minHeight: 180)
@@ -57,7 +58,6 @@ struct TasksView: View {
                             .allowsHitTesting(false)
                     }
                 }
-                .accessibilityLabel("Task description")
 
                 if composer.isLoading {
                     HStack { ProgressView(); Text("Loading available runners…") }
@@ -73,7 +73,12 @@ struct TasksView: View {
                     }
                     .pickerStyle(.menu)
                 } else if let runner = composer.assignableInstances.first {
-                    LabeledContent("Run on", value: "Any instance")
+                    LabeledContent(
+                        "Run on",
+                        value: composer.selectedTargetID == nil
+                            ? "Any instance"
+                            : (runner.isSelf ? "\(runner.name) (this instance)" : runner.name)
+                    )
                     Text("Only \(runner.name) is currently assignable.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -92,6 +97,7 @@ struct TasksView: View {
                         Task { await composer.load(for: selectedInstance, api: appState.api, credentials: appState.credentials) }
                     }
                     .buttonStyle(.bordered)
+                    .disabled(composer.isSubmitting)
                 }
 
                 if let submissionError = composer.submissionError {
