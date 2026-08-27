@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct PortDeckApp: App {
+    @UIApplicationDelegateAdaptor(PortDeckAppDelegate.self) private var appDelegate
     @State private var appState: AppState
     private let modelContainer: ModelContainer
 
@@ -43,6 +44,7 @@ struct PortDeckApp: App {
             AppShellView()
                 .environment(appState)
                 .onOpenURL { appState.handle(url: $0) }
+                .onAppear { appDelegate.connect(to: appState) }
         }
         .modelContainer(modelContainer)
     }

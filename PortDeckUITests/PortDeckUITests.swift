@@ -89,6 +89,16 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(sixthEntry.waitForExistence(timeout: 8))
     }
 
+    func testDailyLogReminderSettingIsAvailable() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UseInMemoryStore"]
+        app.launch()
+        app.tabBars.buttons["Settings"].tap()
+
+        XCTAssertTrue(app.switches["Daily Log reminder"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Daily Log"].exists)
+    }
+
     func testLaunchPerformance() {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             let app = XCUIApplication()
