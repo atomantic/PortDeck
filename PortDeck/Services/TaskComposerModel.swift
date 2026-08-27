@@ -124,7 +124,6 @@ final class TaskComposerModel {
                 baseURL: baseURL,
                 password: password
             )
-            try Task.checkCancellation()
             guard submitID == requestID else { return }
             createdTask = task
             createdTaskProfileName = profileName

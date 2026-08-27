@@ -101,7 +101,7 @@ The screenshot workflow is adapted from MortalLoom and automatically selects ins
 ./take_screenshots.sh --screen 03_capture
 ```
 
-It generates six English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Screenshot output and transient configuration are gitignored.
+It generates eight English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Screenshot output and transient configuration are gitignored.
 
 ## Product identity
 
