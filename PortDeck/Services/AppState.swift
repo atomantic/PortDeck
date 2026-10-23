@@ -10,10 +10,23 @@ enum AppTab: String, Hashable {
     case settings
 }
 
+enum CaptureDestination: String, CaseIterable, Identifiable {
+    case brain = "Brain"
+    case dailyLog = "Daily Log"
+
+    var id: String { rawValue }
+    var icon: String { self == .brain ? "brain.head.profile" : "book.pages" }
+}
+
 @MainActor
 @Observable
 final class AppState {
     var selectedTab: AppTab = .fleet
+    var captureDestination: CaptureDestination = .brain
+    var dailyLogCaptureDate = Date()
+    private(set) var dailyLogReminderEnabled: Bool
+    private(set) var dailyLogReminderMinutes: Int
+    private(set) var dailyLogReminderAuthorization: DailyLogReminderAuthorization = .unknown
     var selectedInstanceID: UUID? {
         didSet {
             if let selectedInstanceID {
@@ -29,14 +42,21 @@ final class AppState {
     let isOfflineDemo: Bool
     private(set) var iCloudSyncEnabled: Bool
     private let fleetSyncCoordinator: FleetSyncCoordinator
+    private let dailyLogReminders: any DailyLogReminderScheduling
+    @ObservationIgnored private var dailyLogReminderUpdateInProgress = false
+    @ObservationIgnored private var dailyLogReminderUpdateWaiters: [CheckedContinuation<Void, Never>] = []
     private let defaults: UserDefaults
     private static let selectedInstanceKey = "selectedPortOSInstanceID"
+    private static let dailyLogReminderEnabledKey = "dailyLogReminderEnabled"
+    private static let dailyLogReminderMinutesKey = "dailyLogReminderMinutes"
+    private static let defaultDailyLogReminderMinutes = 22 * 60
     nonisolated static let iCloudSyncKey = "iCloudFleetAndPasswordSyncEnabled"
 
     init(
         api: PortOSAPIClient = PortOSAPIClient(),
         credentials: any CredentialStore = KeychainCredentialStore(),
         fleetSyncStore: any FleetSyncStore = ICloudFleetSyncStore(),
+        dailyLogReminders: (any DailyLogReminderScheduling)? = nil,
         defaults: UserDefaults = .standard,
         isOfflineDemo: Bool = false
     ) {
@@ -44,7 +64,12 @@ final class AppState {
         self.credentials = credentials
         self.defaults = defaults
         self.isOfflineDemo = isOfflineDemo
+        self.dailyLogReminders = dailyLogReminders ?? DailyLogReminderScheduler()
         iCloudSyncEnabled = defaults.bool(forKey: Self.iCloudSyncKey)
+        dailyLogReminderEnabled = defaults.bool(forKey: Self.dailyLogReminderEnabledKey)
+        dailyLogReminderMinutes = defaults.object(forKey: Self.dailyLogReminderMinutesKey) == nil
+            ? Self.defaultDailyLogReminderMinutes
+            : defaults.integer(forKey: Self.dailyLogReminderMinutesKey)
         fleetSyncCoordinator = FleetSyncCoordinator(store: fleetSyncStore, credentials: credentials)
         if let value = defaults.string(forKey: Self.selectedInstanceKey) {
             selectedInstanceID = UUID(uuidString: value)
@@ -53,6 +78,80 @@ final class AppState {
 
     func select(_ instance: PortOSInstance) {
         selectedInstanceID = instance.localID
+    }
+
+    var dailyLogReminderTime: Date {
+        Self.reminderTime(minutes: dailyLogReminderMinutes, on: Date())
+    }
+
+    static func reminderTime(minutes: Int, on date: Date, calendar: Calendar = .current) -> Date {
+        // A skipped DST time must keep its hour/minute for the repeating trigger.
+        calendar.date(
+            bySettingHour: minutes / 60,
+            minute: minutes % 60,
+            second: 0,
+            of: date,
+            matchingPolicy: .strict
+        ) ?? date
+    }
+
+    func setDailyLogReminderEnabled(_ enabled: Bool) async throws {
+        await beginDailyLogReminderUpdate()
+        defer { finishDailyLogReminderUpdate() }
+        if enabled {
+            try await scheduleDailyLogReminder(at: dailyLogReminderTime)
+        } else {
+            dailyLogReminders.removeDailyReminder()
+        }
+        dailyLogReminderEnabled = enabled
+        defaults.set(enabled, forKey: Self.dailyLogReminderEnabledKey)
+    }
+
+    func setDailyLogReminderTime(_ time: Date) async throws {
+        await beginDailyLogReminderUpdate()
+        defer { finishDailyLogReminderUpdate() }
+        let components = Calendar.current.dateComponents([.hour, .minute], from: time)
+        if dailyLogReminderEnabled {
+            try await scheduleDailyLogReminder(at: time)
+        }
+        dailyLogReminderMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
+        defaults.set(dailyLogReminderMinutes, forKey: Self.dailyLogReminderMinutesKey)
+    }
+
+    private func scheduleDailyLogReminder(at time: Date) async throws {
+        do {
+            try await dailyLogReminders.scheduleDailyReminder(at: time)
+            dailyLogReminderAuthorization = .allowed
+        } catch {
+            dailyLogReminderAuthorization = await dailyLogReminders.authorizationStatus()
+            throw error
+        }
+    }
+
+    private func beginDailyLogReminderUpdate() async {
+        if dailyLogReminderUpdateInProgress {
+            await withCheckedContinuation { dailyLogReminderUpdateWaiters.append($0) }
+        } else {
+            dailyLogReminderUpdateInProgress = true
+        }
+    }
+
+    private func finishDailyLogReminderUpdate() {
+        if dailyLogReminderUpdateWaiters.isEmpty {
+            dailyLogReminderUpdateInProgress = false
+        } else {
+            dailyLogReminderUpdateWaiters.removeFirst().resume()
+        }
+    }
+
+    func refreshDailyLogReminderAuthorization() async {
+        dailyLogReminderAuthorization = await dailyLogReminders.authorizationStatus()
+    }
+
+    func openDailyLogCapture() {
+        dailyLogCaptureDate = Date()
+        captureDestination = .dailyLog
+        selectedTab = .capture
     }
 
     func setICloudSyncEnabled(_ enabled: Bool, modelContext: ModelContext) throws -> FleetSyncSummary {
@@ -101,7 +200,11 @@ final class AppState {
     func handle(url: URL) {
         let destination = url.host ?? url.pathComponents.dropFirst().first
         switch destination {
-        case "capture": selectedTab = .capture
+        case "capture":
+            if url.pathComponents.contains("daily-log") {
+                openDailyLogCapture()
+            }
+            selectedTab = .capture
         case "tasks": selectedTab = .tasks
         case "actions": selectedTab = .actions
         case "settings": selectedTab = .settings
