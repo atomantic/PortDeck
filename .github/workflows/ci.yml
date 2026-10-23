@@ -37,14 +37,12 @@ jobs:
           xcrun simctl list devices available
 
       - name: Run unit tests
+        shell: bash
         run: |
-          if xcrun simctl list devices available | grep -q "iPhone 16"; then
-            DESTINATION="platform=iOS Simulator,name=iPhone 16"
-          elif xcrun simctl list devices available | grep -q "iPhone 15"; then
-            DESTINATION="platform=iOS Simulator,name=iPhone 15"
-          else
-            DESTINATION="platform=iOS Simulator,name=iPhone 14"
-          fi
+          set -euo pipefail
+
+          SIMULATOR_ID="$(python3 scripts/select_ios_simulator.py)"
+          DESTINATION="platform=iOS Simulator,id=$SIMULATOR_ID"
 
           echo "Using destination: $DESTINATION"
 
@@ -67,6 +65,7 @@ jobs:
             -scheme PortDeck \
             -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredAndExited \
             -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredFromSettingsWithoutLogin \
+            -only-testing:PortDeckUITests/PortDeckUITests/testDailyLogReminderSettingIsAvailable \
             -destination "$DESTINATION" \
             -destination-timeout 60 \
             -configuration Debug \
