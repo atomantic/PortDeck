@@ -23,6 +23,7 @@ enum CaptureDestination: String, CaseIterable, Identifiable {
 final class AppState {
     var selectedTab: AppTab = .fleet
     var captureDestination: CaptureDestination = .brain
+    var dailyLogCaptureDate = Date()
     private(set) var dailyLogReminderEnabled: Bool
     private(set) var dailyLogReminderMinutes: Int
     private(set) var dailyLogReminderAuthorization: DailyLogReminderAuthorization = .unknown
@@ -42,6 +43,8 @@ final class AppState {
     private(set) var iCloudSyncEnabled: Bool
     private let fleetSyncCoordinator: FleetSyncCoordinator
     private let dailyLogReminders: any DailyLogReminderScheduling
+    @ObservationIgnored private var dailyLogReminderUpdateInProgress = false
+    @ObservationIgnored private var dailyLogReminderUpdateWaiters: [CheckedContinuation<Void, Never>] = []
     private let defaults: UserDefaults
     private static let selectedInstanceKey = "selectedPortOSInstanceID"
     private static let dailyLogReminderEnabledKey = "dailyLogReminderEnabled"
@@ -78,22 +81,25 @@ final class AppState {
     }
 
     var dailyLogReminderTime: Date {
-        Calendar.current.date(
-            byAdding: .minute,
-            value: dailyLogReminderMinutes,
-            to: Calendar.current.startOfDay(for: Date())
-        ) ?? Date()
+        Self.reminderTime(minutes: dailyLogReminderMinutes, on: Date())
+    }
+
+    static func reminderTime(minutes: Int, on date: Date, calendar: Calendar = .current) -> Date {
+        // A skipped DST time must keep its hour/minute for the repeating trigger.
+        calendar.date(
+            bySettingHour: minutes / 60,
+            minute: minutes % 60,
+            second: 0,
+            of: date,
+            matchingPolicy: .strict
+        ) ?? date
     }
 
     func setDailyLogReminderEnabled(_ enabled: Bool) async throws {
+        await beginDailyLogReminderUpdate()
+        defer { finishDailyLogReminderUpdate() }
         if enabled {
-            do {
-                try await dailyLogReminders.scheduleDailyReminder(at: dailyLogReminderTime)
-                dailyLogReminderAuthorization = .allowed
-            } catch {
-                dailyLogReminderAuthorization = await dailyLogReminders.authorizationStatus()
-                throw error
-            }
+            try await scheduleDailyLogReminder(at: dailyLogReminderTime)
         } else {
             dailyLogReminders.removeDailyReminder()
         }
@@ -101,16 +107,41 @@ final class AppState {
         defaults.set(enabled, forKey: Self.dailyLogReminderEnabledKey)
     }
 
-    func setDailyLogReminderTime(_ time: Date) {
+    func setDailyLogReminderTime(_ time: Date) async throws {
+        await beginDailyLogReminderUpdate()
+        defer { finishDailyLogReminderUpdate() }
         let components = Calendar.current.dateComponents([.hour, .minute], from: time)
+        if dailyLogReminderEnabled {
+            try await scheduleDailyLogReminder(at: time)
+        }
         dailyLogReminderMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
         defaults.set(dailyLogReminderMinutes, forKey: Self.dailyLogReminderMinutesKey)
     }
 
-    func rescheduleDailyLogReminder() async throws {
-        guard dailyLogReminderEnabled else { return }
-        try await dailyLogReminders.scheduleDailyReminder(at: dailyLogReminderTime)
-        dailyLogReminderAuthorization = .allowed
+    private func scheduleDailyLogReminder(at time: Date) async throws {
+        do {
+            try await dailyLogReminders.scheduleDailyReminder(at: time)
+            dailyLogReminderAuthorization = .allowed
+        } catch {
+            dailyLogReminderAuthorization = await dailyLogReminders.authorizationStatus()
+            throw error
+        }
+    }
+
+    private func beginDailyLogReminderUpdate() async {
+        if dailyLogReminderUpdateInProgress {
+            await withCheckedContinuation { dailyLogReminderUpdateWaiters.append($0) }
+        } else {
+            dailyLogReminderUpdateInProgress = true
+        }
+    }
+
+    private func finishDailyLogReminderUpdate() {
+        if dailyLogReminderUpdateWaiters.isEmpty {
+            dailyLogReminderUpdateInProgress = false
+        } else {
+            dailyLogReminderUpdateWaiters.removeFirst().resume()
+        }
     }
 
     func refreshDailyLogReminderAuthorization() async {
@@ -118,6 +149,7 @@ final class AppState {
     }
 
     func openDailyLogCapture() {
+        dailyLogCaptureDate = Date()
         captureDestination = .dailyLog
         selectedTab = .capture
     }
@@ -170,7 +202,7 @@ final class AppState {
         switch destination {
         case "capture":
             if url.pathComponents.contains("daily-log") {
-                captureDestination = .dailyLog
+                openDailyLogCapture()
             }
             selectedTab = .capture
         case "tasks": selectedTab = .tasks

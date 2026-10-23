@@ -12,7 +12,6 @@ struct SettingsView: View {
     @State private var reminderMessage: String?
     @State private var reminderFailed = false
     @State private var isUpdatingReminder = false
-    @State private var reminderRescheduleTask: Task<Void, Never>?
 
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
@@ -55,6 +54,7 @@ struct SettingsView: View {
                                 ),
                                 displayedComponents: .hourAndMinute
                             )
+                            .disabled(isUpdatingReminder)
                         }
 
                         if let reminderMessage {
@@ -151,7 +151,6 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .fullScreenCover(isPresented: $showingOfflineDemo) { OfflineDemoView() }
             .task { await appState.refreshDailyLogReminderAuthorization() }
-            .onDisappear { reminderRescheduleTask?.cancel() }
         }
     }
 
@@ -174,22 +173,17 @@ struct SettingsView: View {
     }
 
     private func updateDailyLogReminderTime(_ time: Date) {
-        appState.setDailyLogReminderTime(time)
+        isUpdatingReminder = true
         reminderMessage = nil
-        reminderRescheduleTask?.cancel()
-        reminderRescheduleTask = Task {
+        Task {
+            defer { isUpdatingReminder = false }
             do {
-                try await Task.sleep(for: .milliseconds(300))
-                try Task.checkCancellation()
-                try await appState.rescheduleDailyLogReminder()
+                try await appState.setDailyLogReminderTime(time)
                 reminderFailed = false
                 reminderMessage = "Daily reminder moved to \(appState.dailyLogReminderTime.formatted(date: .omitted, time: .shortened))."
-            } catch is CancellationError {
-                return
             } catch {
                 reminderFailed = true
                 reminderMessage = error.localizedDescription
-                await appState.refreshDailyLogReminderAuthorization()
             }
         }
     }

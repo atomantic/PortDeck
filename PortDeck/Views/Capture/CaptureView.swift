@@ -6,7 +6,6 @@ struct CaptureView: View {
     @Query(sort: \PortOSInstance.addedAt) private var instances: [PortOSInstance]
 
     @State private var text = DemoMode.isEnabled ? DemoData.captureText : ""
-    @State private var selectedDate = Date()
     @State private var dictation = DictationController()
     @State private var usedDictation = false
     @State private var isSubmitting = false
@@ -55,7 +54,10 @@ struct CaptureView: View {
                 .pickerStyle(.segmented)
 
                 if appState.captureDestination == .dailyLog {
-                    DatePicker("Log date", selection: $selectedDate, displayedComponents: .date)
+                    DatePicker("Log date", selection: Binding(
+                        get: { appState.dailyLogCaptureDate },
+                        set: { appState.dailyLogCaptureDate = $0 }
+                    ), displayedComponents: .date)
                         .datePickerStyle(.compact)
                 }
 
@@ -144,7 +146,7 @@ struct CaptureView: View {
                 )
                 message = (response.result.summary ?? "Captured to Brain.", .success)
             case .dailyLog:
-                let date = Self.dateString(selectedDate)
+                let date = Self.dateString(appState.dailyLogCaptureDate)
                 if usedDictation {
                     let response = try await appState.api.invokeAction(
                         id: "daily_log_append",
