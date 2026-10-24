@@ -9,7 +9,12 @@ struct PortDeckApp: App {
 
     @MainActor
     init() {
-        let isDemoMode = DemoMode.isEnabled
+        #if DEBUG
+        let isRemovalTest = FleetRemovalFixture.isEnabled
+        #else
+        let isRemovalTest = false
+        #endif
+        let isDemoMode = DemoMode.isEnabled || isRemovalTest
         let configuration = ModelConfiguration(
             isStoredInMemoryOnly: isDemoMode || ProcessInfo.processInfo.arguments.contains("-UseInMemoryStore")
         )
@@ -18,6 +23,12 @@ struct PortDeckApp: App {
             if isDemoMode { try DemoData.seed(modelContext: container.mainContext) }
             modelContainer = container
 
+            #if DEBUG
+            if isRemovalTest {
+                _appState = State(initialValue: FleetRemovalFixture.makeState())
+                return
+            }
+            #endif
             if isDemoMode {
                 let suiteName = "net.shadowpuppet.PortDeck.demo"
                 let defaults = UserDefaults(suiteName: suiteName) ?? .standard

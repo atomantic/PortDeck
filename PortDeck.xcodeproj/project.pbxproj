@@ -15,6 +15,7 @@
 		194E28D3B05B25A731C58633 /* ActionResultDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B002FBB64F5EC7DA4E9A5F /* ActionResultDisplayTests.swift */; };
 		2452C87D2461089ABE6B329C /* ICloudFleetSyncStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */; };
 		285A90F7A74B59972111F181 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */; };
+		2D705B67817E5D3C0A548BC5 /* FleetRemovalFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A983807C7A402535A0E1074 /* FleetRemovalFixture.swift */; };
 		2DEEE2B6E5E8764BA6081D71 /* RemoteDesktopModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26864D4ADC4EC690C71FE2C /* RemoteDesktopModels.swift */; };
 		2FCA12300425B2032BD533B9 /* PaletteActionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637E6F7C238853530DC34070 /* PaletteActionPresentation.swift */; };
 		30D1B5F9C730E6E00D4ADBF7 /* KeychainItemClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814A88F3536606FF6A81191C /* KeychainItemClient.swift */; };
@@ -63,6 +64,7 @@
 		E83422B887F3F213577822E7 /* ICloudFleetSyncStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE28A9A2AD442F01E40A543C /* ICloudFleetSyncStore.swift */; };
 		EE8AF231B8AF215492D03C55 /* PortOSEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B564B4DDC3A549F757F70833 /* PortOSEndpoint.swift */; };
 		F781BAE78FB31434158E2C07 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B1938EA3EDA7D90928CA84 /* Color+Brand.swift */; };
+		F796A5D1995E2BBD4EBE2AA8 /* FleetRemovalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85C3E0C018CA085C75D3AF1 /* FleetRemovalTests.swift */; };
 		F9311F126974EC79CE2E8A19 /* PortPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B175D3721B7DE9D5865119D /* PortPanel.swift */; };
 		FC021E6903FAC141C7EC96DE /* PaletteActionBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC59D5552215A6B04E8D411 /* PaletteActionBehavior.swift */; };
 		FEE37A3CBA4F4C752A4FCE85 /* PaletteActionBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5407640AB5FFFD230780CCF /* PaletteActionBehaviorTests.swift */; };
@@ -91,6 +93,7 @@
 		030713827E7F8758FE90A8B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		03690F5A793D3A31C884C828 /* ActionArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionArgumentsTests.swift; sourceTree = "<group>"; };
 		11E2276460E8A3BD70AF6C41 /* DailyLogReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogReminderTests.swift; sourceTree = "<group>"; };
+		1A983807C7A402535A0E1074 /* FleetRemovalFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetRemovalFixture.swift; sourceTree = "<group>"; };
 		1B175D3721B7DE9D5865119D /* PortPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortPanel.swift; sourceTree = "<group>"; };
 		1EEE6276C0CE74A3AC23C8CD /* AddFederationPeerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFederationPeerView.swift; sourceTree = "<group>"; };
 		222601337C745F82DD4E1962 /* InstanceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceDetailView.swift; sourceTree = "<group>"; };
@@ -138,6 +141,7 @@
 		C5407640AB5FFFD230780CCF /* PaletteActionBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteActionBehaviorTests.swift; sourceTree = "<group>"; };
 		C7B1938EA3EDA7D90928CA84 /* Color+Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Brand.swift"; sourceTree = "<group>"; };
 		C7BFBF6AB8FC52931DE0B55F /* ActionResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionResultView.swift; sourceTree = "<group>"; };
+		C85C3E0C018CA085C75D3AF1 /* FleetRemovalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetRemovalTests.swift; sourceTree = "<group>"; };
 		C9AE2BBFBE27494005E26A63 /* AddInstanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddInstanceView.swift; sourceTree = "<group>"; };
 		CE3A2E177F6BDD305E318E13 /* PreviewAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PreviewAssets.xcassets; sourceTree = "<group>"; };
 		D86E88594C42166D3ECB87D6 /* PaletteActionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteActionFixture.swift; sourceTree = "<group>"; };
@@ -233,6 +237,7 @@
 				257B4C2EDB0AE72621B30F07 /* CaptureComposerModelTests.swift */,
 				11E2276460E8A3BD70AF6C41 /* DailyLogReminderTests.swift */,
 				68F63D7F47072332EFA2378C /* DemoDataTests.swift */,
+				C85C3E0C018CA085C75D3AF1 /* FleetRemovalTests.swift */,
 				379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */,
 				26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */,
 				2F2CEB20C6B541ED301A25BD /* InMemoryKeychainItemClient.swift */,
@@ -333,6 +338,7 @@
 				57D2CFE90554D9616B0796AB /* DailyLogReminderScheduler.swift */,
 				6B351C0DF26B662D65EFFBB8 /* DemoData.swift */,
 				34429E825AA3AE3B5901EC9B /* DictationController.swift */,
+				1A983807C7A402535A0E1074 /* FleetRemovalFixture.swift */,
 				DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */,
 				BE28A9A2AD442F01E40A543C /* ICloudFleetSyncStore.swift */,
 				9FDAB0A6119E7E7638D040A3 /* KeychainCredentialStore.swift */,
@@ -475,6 +481,7 @@
 				0BCB134D03DB14C14F995E67 /* CaptureComposerModelTests.swift in Sources */,
 				6FADA363733182D1264E3117 /* DailyLogReminderTests.swift in Sources */,
 				62BBCA1D8D851F296A86C0B5 /* DemoDataTests.swift in Sources */,
+				F796A5D1995E2BBD4EBE2AA8 /* FleetRemovalTests.swift in Sources */,
 				13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */,
 				2452C87D2461089ABE6B329C /* ICloudFleetSyncStoreTests.swift in Sources */,
 				804FE19BF322E51D845173D6 /* InMemoryKeychainItemClient.swift in Sources */,
@@ -510,6 +517,7 @@
 				34791959EE25157E367AA2B7 /* DemoData.swift in Sources */,
 				E22BEA5680C61A40EC53F28C /* DictationController.swift in Sources */,
 				34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */,
+				2D705B67817E5D3C0A548BC5 /* FleetRemovalFixture.swift in Sources */,
 				90456A6F3931504957C2A1C5 /* FleetSyncCoordinator.swift in Sources */,
 				3F4D71AE753570E237D64F86 /* FleetView.swift in Sources */,
 				E83422B887F3F213577822E7 /* ICloudFleetSyncStore.swift in Sources */,
