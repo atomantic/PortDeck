@@ -113,7 +113,13 @@ final class PortDeckUITests: XCTestCase {
     func testFleetRemovalCancelAndConfirmedSuccess() {
         let app = launchRemovalFixture()
         openRemovalConfirmation(app)
-        app.buttons["Cancel"].tap()
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+        } else {
+            // iOS 26 presents an anchored popover; tapping outside cancels it.
+            app.navigationBars["Atlas Studio"].tap()
+        }
+        XCTAssertFalse(app.buttons["Remove from PortDeck"].exists)
         XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
 
         openRemovalConfirmation(app, openDetail: false)
