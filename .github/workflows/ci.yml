@@ -60,6 +60,31 @@ jobs:
             -skipMacroValidation \
             | xcbeautify
 
+          # Native Security needs an application-identifier entitlement, absent
+          # from unsigned simulator hosts. Ad hoc signing needs no account.
+          xcodebuild test \
+            -project PortDeck.xcodeproj \
+            -scheme PortDeck \
+            -only-testing:PortDeckTests/KeychainCredentialStoreTests/testNativeDeviceOnlyRoundTripUsesUniqueServiceAndCleansUpItsOwnItems \
+            -destination "$DESTINATION" \
+            -configuration Debug \
+            -derivedDataPath build \
+            -resultBundlePath build/native-keychain.xcresult \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcbeautify
+
+          xcrun xcresulttool get test-results summary --path build/native-keychain.xcresult > build/native-keychain-summary.json
+          python3 - <<'PY'
+          import json
+          with open("build/native-keychain-summary.json") as result:
+              summary = json.load(result)
+          assert summary["passedTests"] == 1, summary
+          assert summary["skippedTests"] == 0, summary
+          assert summary["failedTests"] == 0, summary
+          PY
+
           xcodebuild test \
             -project PortDeck.xcodeproj \
             -scheme PortDeck \

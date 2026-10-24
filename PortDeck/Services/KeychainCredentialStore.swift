@@ -21,15 +21,18 @@ enum CredentialStoreError: LocalizedError {
 }
 
 final class KeychainCredentialStore: CredentialStore, @unchecked Sendable {
+    private let keychain: any KeychainItemClient
     private let service: String
     private let iCloudEnabled: @Sendable () -> Bool
 
     init(
         service: String = "net.shadowpuppet.PortDeck.portos-password",
+        keychain: any KeychainItemClient = SystemKeychainItemClient(),
         iCloudEnabled: @escaping @Sendable () -> Bool = {
             UserDefaults.standard.bool(forKey: AppState.iCloudSyncKey)
         }
     ) {
+        self.keychain = keychain
         self.service = service
         self.iCloudEnabled = iCloudEnabled
     }
@@ -73,8 +76,7 @@ final class KeychainCredentialStore: CredentialStore, @unchecked Sendable {
         var query = baseQuery(instanceID, synchronizable: synchronizable)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        let (status, item) = keychain.copyMatching(query)
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess else { throw CredentialStoreError.keychain(status) }
         guard let data = item as? Data, let password = String(data: data, encoding: .utf8) else {
@@ -87,7 +89,7 @@ final class KeychainCredentialStore: CredentialStore, @unchecked Sendable {
         let data = Data(password.utf8)
         let query = baseQuery(instanceID, synchronizable: synchronizable)
         let update = [kSecValueData as String: data]
-        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        let updateStatus = keychain.update(query, attributes: update)
         if updateStatus == errSecSuccess { return }
         guard updateStatus == errSecItemNotFound else { throw CredentialStoreError.keychain(updateStatus) }
 
@@ -96,12 +98,12 @@ final class KeychainCredentialStore: CredentialStore, @unchecked Sendable {
         insert[kSecAttrAccessible as String] = synchronizable
             ? kSecAttrAccessibleAfterFirstUnlock
             : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        let addStatus = SecItemAdd(insert as CFDictionary, nil)
+        let addStatus = keychain.add(insert)
         guard addStatus == errSecSuccess else { throw CredentialStoreError.keychain(addStatus) }
     }
 
     private func deletePassword(for instanceID: UUID, synchronizable: Bool) throws {
-        let status = SecItemDelete(baseQuery(instanceID, synchronizable: synchronizable) as CFDictionary)
+        let status = keychain.delete(baseQuery(instanceID, synchronizable: synchronizable))
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw CredentialStoreError.keychain(status)
         }
