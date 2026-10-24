@@ -101,7 +101,9 @@ The screenshot workflow is adapted from MortalLoom and automatically selects ins
 ./take_screenshots.sh --screen 03_capture
 ```
 
-It generates eight English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Screenshot output and transient configuration are gitignored.
+It generates eight English screenshots per device under `screenshots/en/`, fixes the simulator status bar at 9:41, and always launches the app with demo data. Full captures stage each device in a fresh directory and replace only that device’s English set after the capture succeeds, removing retired images. A failed capture leaves its previous set intact. `--screen` updates only the selected image and preserves the rest; `--iphone-only` and `--ipad-only` leave the other device untouched. Temporary capture directories are removed on exit. Screenshot output and transient configuration are gitignored.
+
+Run the screenshot publishing regression tests without simulators or Apple credentials with `python3 -m unittest discover -s scripts -p 'test_screenshot_capture.py'`.
 
 ## Product identity
 

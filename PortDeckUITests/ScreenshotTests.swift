@@ -53,32 +53,32 @@ final class ScreenshotTests: XCTestCase {
     }
 
     private func captureAppStoreScreenshots() throws {
-        saveScreenshot("01_fleet")
+        try saveScreenshot("01_fleet")
 
         let studio = app.staticTexts["Atlas Studio"].firstMatch
         XCTAssertTrue(studio.waitForExistence(timeout: 4))
         studio.tap()
         XCTAssertTrue(app.staticTexts["Federation"].waitForExistence(timeout: 4))
-        saveScreenshot("02_federation")
+        try saveScreenshot("02_federation")
 
         selectTab("Capture")
         XCTAssertTrue(app.navigationBars["Capture"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.buttons["Send"].waitForExistence(timeout: 2))
-        saveScreenshot("03_capture")
+        try saveScreenshot("03_capture")
 
         selectTab("Tasks")
         XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.buttons["Queue task"].waitForExistence(timeout: 4))
-        saveScreenshot("04_tasks")
+        try saveScreenshot("04_tasks")
 
         selectTab("Actions")
         XCTAssertTrue(app.staticTexts["Recent Brain entries"].waitForExistence(timeout: 5))
-        saveScreenshot("05_actions")
+        try saveScreenshot("05_actions")
 
         app.staticTexts["Recent Brain entries"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Recent Brain entries"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.staticTexts["Last 5 captures."].waitForExistence(timeout: 5))
-        saveScreenshot("06_action_results")
+        try saveScreenshot("06_action_results")
 
         app.navigationBars.buttons.element(boundBy: 0).tap()
         let focusSession = app.staticTexts["Start Focus Session"].firstMatch
@@ -86,7 +86,7 @@ final class ScreenshotTests: XCTestCase {
         scrollUntilHittable(focusSession)
         focusSession.tap()
         XCTAssertTrue(app.navigationBars["Start Focus Session"].waitForExistence(timeout: 4))
-        saveScreenshot("07_action_form")
+        try saveScreenshot("07_action_form")
 
         selectTab("Settings")
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 4))
@@ -94,7 +94,7 @@ final class ScreenshotTests: XCTestCase {
             app.swipeUp()
             Thread.sleep(forTimeInterval: 0.4)
         }
-        saveScreenshot("08_privacy")
+        try saveScreenshot("08_privacy")
     }
 
     /// The action list grows as PortOS adds palette entries, so scroll rather than assume
@@ -117,7 +117,7 @@ final class ScreenshotTests: XCTestCase {
         button.tap()
     }
 
-    private func saveScreenshot(_ name: String) {
+    private func saveScreenshot(_ name: String) throws {
         if let targetScreen, targetScreen != name { return }
 
         // Let navigation and liquid-glass tab transitions finish before rasterizing.
@@ -129,8 +129,8 @@ final class ScreenshotTests: XCTestCase {
         add(attachment)
 
         let directory = "\(outputDirectory)/en/\(deviceType)"
-        try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
-        try? screenshot.pngRepresentation.write(
+        try FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        try screenshot.pngRepresentation.write(
             to: URL(fileURLWithPath: "\(directory)/\(name).png"),
             options: .atomic
         )
