@@ -6,9 +6,84 @@ protocol HTTPTransport: Sendable {
 
 extension URLSession: HTTPTransport {}
 
+/// Every redirect is checked before URLSession can send the next request.
+struct OriginBoundTransport: HTTPTransport {
+    private let session: URLSession
+
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        guard let url = request.url, let origin = HTTPOrigin(url: url) else {
+            throw PortOSAPIError.invalidResponse
+        }
+        let delegate = OriginRedirectDelegate(origin: origin, authorization: request.value(forHTTPHeaderField: "Authorization"))
+        do {
+            let result = try await session.data(for: request, delegate: delegate)
+            try Task.checkCancellation()
+            if delegate.rejectedRedirect { throw PortOSAPIError.redirectedOutsideInstance }
+            return result
+        } catch {
+            if Task.isCancelled { throw CancellationError() }
+            if delegate.rejectedRedirect { throw PortOSAPIError.redirectedOutsideInstance }
+            throw error
+        }
+    }
+}
+
+struct HTTPOrigin: Equatable {
+    let scheme: String
+    let host: String
+    let port: Int
+
+    init?(url: URL) {
+        guard let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              let host = url.host?.lowercased(), !host.isEmpty else { return nil }
+        self.scheme = scheme
+        self.host = host
+        self.port = url.port ?? (scheme == "https" ? 443 : 80)
+    }
+}
+
+private final class OriginRedirectDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    private let origin: HTTPOrigin
+    private let authorization: String?
+    private let lock = NSLock()
+    private var rejected = false
+
+    var rejectedRedirect: Bool { lock.withLock { rejected } }
+
+    init(origin: HTTPOrigin, authorization: String?) {
+        self.origin = origin
+        self.authorization = authorization
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        guard let url = request.url, HTTPOrigin(url: url) == origin else {
+            lock.withLock { rejected = true }
+            completionHandler(nil)
+            return
+        }
+        // Foundation owns redirect method/body semantics. Restore the original
+        // credential only after the hop has passed the original-origin check.
+        var request = request
+        request.setValue(authorization, forHTTPHeaderField: "Authorization")
+        completionHandler(request)
+    }
+}
+
 enum PortOSAPIError: LocalizedError, Equatable {
     case authenticationRequired
     case invalidResponse
+    case redirectedOutsideInstance
     case server(status: Int, message: String)
     case unreachable(String)
     case decoding(String)
@@ -17,6 +92,7 @@ enum PortOSAPIError: LocalizedError, Equatable {
         switch self {
         case .authenticationRequired: "PortOS rejected the password. Update the credential and try again."
         case .invalidResponse: "The host did not return a valid HTTP response."
+        case .redirectedOutsideInstance: "This PortOS instance redirected to a different server. Update its configured endpoint before trying again."
         case .server(let status, let message): "PortOS returned HTTP \(status): \(message)"
         case .unreachable(let message): "Could not reach this PortOS instance: \(message)"
         case .decoding(let message): "PortOS returned data this app does not understand: \(message)"
@@ -29,7 +105,7 @@ struct PortOSAPIClient: Sendable {
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
 
-    init(transport: any HTTPTransport = URLSession.shared) {
+    init(transport: any HTTPTransport = OriginBoundTransport()) {
         self.transport = transport
     }
 
@@ -238,6 +314,7 @@ struct PortOSAPIClient: Sendable {
             if error is CancellationError || Task.isCancelled {
                 throw CancellationError()
             }
+            if let error = error as? PortOSAPIError { throw error }
             throw PortOSAPIError.unreachable(error.localizedDescription)
         }
         guard let http = response as? HTTPURLResponse else { throw PortOSAPIError.invalidResponse }
