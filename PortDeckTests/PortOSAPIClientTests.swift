@@ -333,6 +333,52 @@ final class OriginBoundTransportTests: XCTestCase {
         XCTAssertEqual(source.requests.count, 2)
     }
 
+    func testPreCancelledTransportCompletesWithoutSendingRequest() async throws {
+        let source = try await LocalHTTPFixture.start { _ in .json("{}") }
+        defer { source.stop() }
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await OriginBoundTransport().data(for: URLRequest(url: source.baseURL))
+        }
+
+        do {
+            _ = try await task.value
+            XCTFail("Expected cancellation")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+        XCTAssertEqual(source.connectionCount, 0)
+        XCTAssertTrue(source.requests.isEmpty)
+    }
+
+    func testCancellationBeforeNativeTaskRegistrationStillCompletes() async throws {
+        let source = try await LocalHTTPFixture.start { _ in .json("{}") }
+        defer { source.stop() }
+        let registration = OriginBoundTaskRegistration()
+        // Deterministically deliver onCancel before the task is registered.
+        registration.cancel()
+        do {
+            let _: (Data, URLResponse) = try await withCheckedThrowingContinuation { continuation in
+                let task = URLSession.shared.dataTask(with: source.baseURL) { data, response, error in
+                    registration.complete()
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else if let response {
+                        continuation.resume(returning: (data ?? Data(), response))
+                    } else {
+                        continuation.resume(throwing: PortOSAPIError.invalidResponse)
+                    }
+                }
+                registration.start(task)
+            }
+            XCTFail("Expected cancellation")
+        } catch {
+            XCTAssertEqual((error as? URLError)?.code, .cancelled)
+        }
+        XCTAssertEqual(source.connectionCount, 0)
+        XCTAssertTrue(source.requests.isEmpty)
+    }
+
     func testFixtureDetectsBodyReplayWithUnrestrictedURLSession() async throws {
         // A positive control for the fixture: reverting the production default to
         // this transport would deliver the body and make the refusal tests fail.

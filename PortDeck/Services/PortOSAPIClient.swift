@@ -20,7 +20,30 @@ struct OriginBoundTransport: HTTPTransport {
         }
         let delegate = OriginRedirectDelegate(origin: origin, authorization: request.value(forHTTPHeaderField: "Authorization"))
         do {
-            let result = try await session.data(for: request, delegate: delegate)
+            let registration = OriginBoundTaskRegistration()
+            let result: (Data, URLResponse) = try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    // Foundation's async overlay can trap when a declined redirect
+                    // finishes with no response or error. Guard the optional
+                    // response while keeping the same session and task delegate.
+                    let task = session.dataTask(with: request) { data, response, error in
+                        registration.complete()
+                        if delegate.rejectedRedirect {
+                            continuation.resume(throwing: PortOSAPIError.redirectedOutsideInstance)
+                        } else if let error {
+                            continuation.resume(throwing: error)
+                        } else if let response {
+                            continuation.resume(returning: (data ?? Data(), response))
+                        } else {
+                            continuation.resume(throwing: PortOSAPIError.invalidResponse)
+                        }
+                    }
+                    task.delegate = delegate
+                    registration.start(task)
+                }
+            } onCancel: {
+                registration.cancel()
+            }
             try Task.checkCancellation()
             if delegate.rejectedRedirect { throw PortOSAPIError.redirectedOutsideInstance }
             return result
@@ -29,6 +52,38 @@ struct OriginBoundTransport: HTTPTransport {
             if delegate.rejectedRedirect { throw PortOSAPIError.redirectedOutsideInstance }
             throw error
         }
+    }
+}
+
+
+/// Remembers cancellation even when it arrives before the native task exists.
+/// Only URLSession's completion handler resumes the request continuation.
+final class OriginBoundTaskRegistration: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: URLSessionTask?
+    private var cancelled = false
+
+    func start(_ task: URLSessionTask) {
+        let shouldCancel = lock.withLock {
+            self.task = task
+            return cancelled
+        }
+        if shouldCancel { task.cancel() }
+        // Even a task cancelled before registration must enter its completion
+        // lifecycle so the awaiting continuation is resolved by URLSession.
+        task.resume()
+    }
+
+    func cancel() {
+        let activeTask = lock.withLock {
+            cancelled = true
+            return task
+        }
+        activeTask?.cancel()
+    }
+
+    func complete() {
+        lock.withLock { task = nil }
     }
 }
 
