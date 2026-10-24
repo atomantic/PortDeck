@@ -9,12 +9,17 @@ protocol FleetSyncStore: Sendable {
 /// Stores one fleet profile per synchronizable Keychain item so edits to separate
 /// instances on separate devices cannot overwrite the whole fleet as one blob.
 final class ICloudFleetSyncStore: FleetSyncStore, @unchecked Sendable {
+    private let keychain: any KeychainItemClient
     private let service: String
     private let legacyIndexAccount = "fleet-index-v1"
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    init(service: String = "net.shadowpuppet.PortDeck.icloud-fleet") {
+    init(
+        service: String = "net.shadowpuppet.PortDeck.icloud-fleet",
+        keychain: any KeychainItemClient = SystemKeychainItemClient()
+    ) {
+        self.keychain = keychain
         self.service = service
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
@@ -25,8 +30,7 @@ final class ICloudFleetSyncStore: FleetSyncStore, @unchecked Sendable {
         query[kSecReturnAttributes as String] = true
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitAll
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        let (status, item) = keychain.copyMatching(query)
         if status == errSecItemNotFound { return [] }
         guard status == errSecSuccess else { throw CredentialStoreError.keychain(status) }
 
@@ -64,7 +68,7 @@ final class ICloudFleetSyncStore: FleetSyncStore, @unchecked Sendable {
         }
 
         // Once every profile has its own item, the old all-fleet blob is redundant.
-        let legacyDeleteStatus = SecItemDelete(profileQuery(account: legacyIndexAccount) as CFDictionary)
+        let legacyDeleteStatus = keychain.delete(profileQuery(account: legacyIndexAccount))
         guard legacyDeleteStatus == errSecSuccess || legacyDeleteStatus == errSecItemNotFound else {
             throw CredentialStoreError.keychain(legacyDeleteStatus)
         }
@@ -73,17 +77,14 @@ final class ICloudFleetSyncStore: FleetSyncStore, @unchecked Sendable {
     private func save(_ profile: SyncedInstanceProfile) throws {
         let data = try encoder.encode(profile)
         let query = profileQuery(account: profile.localID.uuidString)
-        let updateStatus = SecItemUpdate(
-            query as CFDictionary,
-            [kSecValueData as String: data] as CFDictionary
-        )
+        let updateStatus = keychain.update(query, attributes: [kSecValueData as String: data])
         if updateStatus == errSecSuccess { return }
         guard updateStatus == errSecItemNotFound else { throw CredentialStoreError.keychain(updateStatus) }
 
         var insert = query
         insert[kSecValueData as String] = data
         insert[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-        let addStatus = SecItemAdd(insert as CFDictionary, nil)
+        let addStatus = keychain.add(insert)
         guard addStatus == errSecSuccess else { throw CredentialStoreError.keychain(addStatus) }
     }
 
