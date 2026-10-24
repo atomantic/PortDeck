@@ -559,11 +559,23 @@ def upload_screenshot_sets(
             ).get("data", [])
             expected_names = [path.name for path in paths]
             actual_names = [item.get("attributes", {}).get("fileName") for item in existing]
+            expected_checksums = [
+                hashlib.md5(path.read_bytes()).hexdigest()  # noqa: S324 - required by App Store Connect
+                for path in paths
+            ]
+            actual_checksums = [
+                item.get("attributes", {}).get("sourceFileChecksum")
+                for item in existing
+            ]
             complete = all(
                 item.get("attributes", {}).get("assetDeliveryState", {}).get("state") == "COMPLETE"
                 for item in existing
             )
-            if actual_names == expected_names and complete:
+            checksums_match = len(actual_checksums) == len(expected_checksums) and all(
+                isinstance(actual, str) and actual.lower() == expected.lower()
+                for actual, expected in zip(actual_checksums, expected_checksums)
+            )
+            if actual_names == expected_names and complete and checksums_match:
                 print(f"Kept existing {display_type} screenshot set ({len(existing)} images)")
                 continue
             raise RuntimeError(
