@@ -22,6 +22,7 @@ DERIVED_DATA="$PROJECT_DIR/.build/ScreenshotDerivedData"
 CAPTURE_IPHONE=true
 CAPTURE_IPAD=true
 TARGET_SCREEN=""
+CAPTURE_DIR=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -91,6 +92,13 @@ fi
 
 cleanup() {
     rm -f "$CONFIG_FILE_PROJECT" "$CONFIG_FILE_TMP"
+    if [[ -n "$CAPTURE_DIR" ]]; then
+        if [[ -e "$CAPTURE_DIR/previous" ]]; then
+            echo "❌ Previous screenshots retained for recovery in $CAPTURE_DIR/previous" >&2
+        else
+            rm -rf "$CAPTURE_DIR"
+        fi
+    fi
     for device_spec in "${DEVICES[@]}"; do
         IFS='|' read -r udid _ <<< "$device_spec"
         xcrun simctl status_bar "$udid" clear >/dev/null 2>&1 || true
@@ -100,10 +108,10 @@ trap cleanup EXIT
 
 write_config() {
     local device_folder="$1"
-    local config
-    config=$(printf '{\n  "device": "%s",\n  "output_dir": "%s",\n  "target_screen": "%s"\n}\n' \
-        "$device_folder" "$SCREENSHOTS_DIR" "$TARGET_SCREEN")
-    printf '%s' "$config" > "$CONFIG_FILE_PROJECT"
+    python3 - "$device_folder" "$CAPTURE_DIR" "$TARGET_SCREEN" > "$CONFIG_FILE_PROJECT" <<'PYCONFIG'
+import json, sys
+json.dump(dict(zip(("device", "output_dir", "target_screen"), sys.argv[1:])), sys.stdout)
+PYCONFIG
     cp "$CONFIG_FILE_PROJECT" "$CONFIG_FILE_TMP"
 }
 
@@ -137,6 +145,9 @@ for device_spec in "${DEVICES[@]}"; do
         --wifiBars 3 \
         --cellularBars 4 >/dev/null 2>&1 || true
 
+    # Stage on the output filesystem so publishing can rename the completed set.
+    mkdir -p "$SCREENSHOTS_DIR"
+    CAPTURE_DIR="$(mktemp -d "$SCREENSHOTS_DIR/.capture.XXXXXX")"
     write_config "$device_folder"
     echo "📷 Capturing $device_folder..."
     xcodebuild test-without-building \
@@ -148,7 +159,10 @@ for device_spec in "${DEVICES[@]}"; do
         CODE_SIGNING_ALLOWED=NO \
         -quiet
 
-    count=$(find "$SCREENSHOTS_DIR/en/$device_folder" -maxdepth 1 -name '*.png' | wc -l | tr -d ' ')
+    count=$(python3 "$PROJECT_DIR/scripts/publish_screenshot_capture.py" \
+        "$CAPTURE_DIR" "$SCREENSHOTS_DIR" "$device_folder" "$TARGET_SCREEN")
+    rm -rf "$CAPTURE_DIR"
+    CAPTURE_DIR=""
     echo "✅ $device_folder: $count screenshots"
 done
 
