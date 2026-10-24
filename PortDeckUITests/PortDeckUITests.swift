@@ -117,7 +117,7 @@ final class PortDeckUITests: XCTestCase {
             app.buttons["Cancel"].tap()
         } else {
             // iOS 26 presents an anchored popover; tapping outside cancels it.
-            app.navigationBars["Atlas Studio"].tap()
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
         }
         XCTAssertFalse(app.buttons["Remove from PortDeck"].exists)
         XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
@@ -133,10 +133,11 @@ final class PortDeckUITests: XCTestCase {
         openRemovalConfirmation(app)
         app.buttons["Remove from PortDeck"].tap()
         XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
-        for _ in 0..<4 { app.swipeDown() }
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(
+        let removalError = app.staticTexts.containing(NSPredicate(
             format: "label CONTAINS %@", "Cloud removal is temporarily unavailable."
-        )).firstMatch.waitForExistence(timeout: 5))
+        )).firstMatch
+        XCTAssertTrue(removalError.waitForExistence(timeout: 5))
+        XCTAssertTrue(removalError.isHittable)
 
         openRemovalConfirmation(app, openDetail: false)
         app.buttons["Remove from PortDeck"].tap()

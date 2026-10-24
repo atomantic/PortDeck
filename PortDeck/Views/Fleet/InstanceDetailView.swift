@@ -22,20 +22,26 @@ struct InstanceDetailView: View {
     @State private var peerToRemove: FederationPeer?
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                identityHeader
-                if let removalError {
-                    InlineMessage(text: removalError, kind: .error)
-                        .accessibilityIdentifier("fleetRemovalError")
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    identityHeader
+                    if let removalError {
+                        InlineMessage(text: removalError, kind: .error)
+                            .accessibilityIdentifier("fleetRemovalError")
+                            .id("fleetRemovalError")
+                    }
+                    if let message { InlineMessage(text: message, kind: .error) }
+                    connectionPanel
+                    remoteDesktopPanel
+                    federationPanel
+                    managementPanel
                 }
-                if let message { InlineMessage(text: message, kind: .error) }
-                connectionPanel
-                remoteDesktopPanel
-                federationPanel
-                managementPanel
+                .padding(16)
             }
-            .padding(16)
+            .onChange(of: removalError) { _, error in
+                if error != nil { proxy.scrollTo("fleetRemovalError", anchor: .top) }
+            }
         }
         .background(Color.portCanvas)
         .navigationTitle(instance.displayName)
