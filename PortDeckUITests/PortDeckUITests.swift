@@ -117,7 +117,7 @@ final class PortDeckUITests: XCTestCase {
             app.buttons["Cancel"].tap()
         } else {
             // iOS 26 presents an anchored popover; tapping outside cancels it.
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.75)).tap()
         }
         XCTAssertFalse(app.buttons["Remove from PortDeck"].exists)
         XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
