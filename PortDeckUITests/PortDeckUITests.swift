@@ -110,6 +110,62 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Daily Log"].exists)
     }
 
+    func testFleetRemovalCancelAndConfirmedSuccess() {
+        let app = launchRemovalFixture()
+        openRemovalConfirmation(app)
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+        } else {
+            // iOS 26 presents an anchored popover; tapping outside cancels it.
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.75)).tap()
+        }
+        XCTAssertFalse(app.buttons["Remove from PortDeck"].exists)
+        XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
+
+        openRemovalConfirmation(app, openDetail: false)
+        app.buttons["Remove from PortDeck"].tap()
+        XCTAssertTrue(app.navigationBars["PortOS Fleet"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Atlas Studio"].exists)
+    }
+
+    func testFleetRemovalFailureStaysVisibleAndRetryFinishes() {
+        let app = launchRemovalFixture(failFirstRemoval: true)
+        openRemovalConfirmation(app)
+        app.buttons["Remove from PortDeck"].tap()
+        XCTAssertTrue(app.navigationBars["Atlas Studio"].exists)
+        let removalError = app.staticTexts.containing(NSPredicate(
+            format: "label CONTAINS %@", "Cloud removal is temporarily unavailable."
+        )).firstMatch
+        XCTAssertTrue(removalError.waitForExistence(timeout: 5))
+        XCTAssertTrue(removalError.isHittable)
+
+        openRemovalConfirmation(app, openDetail: false)
+        app.buttons["Remove from PortDeck"].tap()
+        XCTAssertTrue(app.navigationBars["PortOS Fleet"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Atlas Studio"].exists)
+    }
+
+    private func launchRemovalFixture(failFirstRemoval: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-fleet-removal-test"]
+        if failFirstRemoval { app.launchArguments.append("-fail-first-removal") }
+        app.launch()
+        return app
+    }
+
+    private func openRemovalConfirmation(_ app: XCUIApplication, openDetail: Bool = true) {
+        if openDetail {
+            let instance = app.staticTexts["Atlas Studio"].firstMatch
+            XCTAssertTrue(instance.waitForExistence(timeout: 5))
+            instance.tap()
+        }
+        let remove = app.buttons["Remove instance"]
+        for _ in 0..<6 where !remove.isHittable { app.swipeUp() }
+        XCTAssertTrue(remove.isHittable)
+        remove.tap()
+        XCTAssertTrue(app.buttons["Remove from PortDeck"].waitForExistence(timeout: 3))
+    }
+
     func testLaunchPerformance() {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             let app = XCUIApplication()

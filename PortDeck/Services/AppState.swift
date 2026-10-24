@@ -45,6 +45,7 @@ final class AppState {
     private let dailyLogReminders: any DailyLogReminderScheduling
     @ObservationIgnored private var dailyLogReminderUpdateInProgress = false
     @ObservationIgnored private var dailyLogReminderUpdateWaiters: [CheckedContinuation<Void, Never>] = []
+    private let saveFleetRemoval: (ModelContext) throws -> Void
     private let defaults: UserDefaults
     private static let selectedInstanceKey = "selectedPortOSInstanceID"
     private static let dailyLogReminderEnabledKey = "dailyLogReminderEnabled"
@@ -58,8 +59,10 @@ final class AppState {
         fleetSyncStore: any FleetSyncStore = ICloudFleetSyncStore(),
         dailyLogReminders: (any DailyLogReminderScheduling)? = nil,
         defaults: UserDefaults = .standard,
-        isOfflineDemo: Bool = false
+        isOfflineDemo: Bool = false,
+        saveFleetRemoval: @escaping (ModelContext) throws -> Void = { try $0.save() }
     ) {
+        self.saveFleetRemoval = saveFleetRemoval
         self.api = api
         self.credentials = credentials
         self.defaults = defaults
@@ -184,6 +187,27 @@ final class AppState {
     func recordFleetDeletion(_ instance: PortOSInstance) throws {
         guard iCloudSyncEnabled else { return }
         try fleetSyncCoordinator.recordDeletion(instance)
+    }
+
+    /// Sync-disabled removal is local-only; enabling sync later can import a remote copy.
+    func removeFleetInstance(_ instance: PortOSInstance, modelContext: ModelContext) throws {
+        // Persist existing edits first so rollback below only undoes this deletion.
+        try modelContext.save()
+        let remaining = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
+            .filter { $0.localID != instance.localID }
+        try recordFleetDeletion(instance)
+        try credentials.removePassword(for: instance.localID)
+        modelContext.delete(instance)
+        do {
+            try saveFleetRemoval(modelContext)
+        } catch {
+            // Published tombstones and removed passwords are idempotent on retry.
+            modelContext.rollback()
+            throw error
+        }
+        if !remaining.contains(where: { $0.localID == selectedInstanceID }) {
+            selectedInstanceID = remaining.first?.localID
+        }
     }
 
     private func reconcileSelectedInstance(modelContext: ModelContext) throws {

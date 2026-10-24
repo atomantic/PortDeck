@@ -15,22 +15,34 @@ struct InstanceDetailView: View {
     @State private var isRefreshing = false
     @State private var busyPeerID: String?
     @State private var message: String?
+    @State private var removalError: String?
+    @State private var removalFailureCount = 0
     @State private var showingEdit = false
     @State private var showingAddPeer = false
     @State private var showingDeleteConfirmation = false
     @State private var peerToRemove: FederationPeer?
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                identityHeader
-                if let message { InlineMessage(text: message, kind: .error) }
-                connectionPanel
-                remoteDesktopPanel
-                federationPanel
-                managementPanel
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    identityHeader
+                    if let removalError {
+                        InlineMessage(text: removalError, kind: .error)
+                            .accessibilityIdentifier("fleetRemovalError")
+                            .id("fleetRemovalError")
+                    }
+                    if let message { InlineMessage(text: message, kind: .error) }
+                    connectionPanel
+                    remoteDesktopPanel
+                    federationPanel
+                    managementPanel
+                }
+                .padding(16)
             }
-            .padding(16)
+            .onChange(of: removalFailureCount) { _, _ in
+                proxy.scrollTo("fleetRemovalError", anchor: .top)
+            }
         }
         .background(Color.portCanvas)
         .navigationTitle(instance.displayName)
@@ -380,12 +392,14 @@ struct InstanceDetailView: View {
     }
 
     private func removeInstance() {
-        try? appState.recordFleetDeletion(instance)
-        try? appState.credentials.removePassword(for: instance.localID)
-        if appState.selectedInstanceID == instance.localID { appState.selectedInstanceID = nil }
-        modelContext.delete(instance)
-        try? modelContext.save()
-        dismiss()
+        removalError = nil
+        do {
+            try appState.removeFleetInstance(instance, modelContext: modelContext)
+            dismiss()
+        } catch {
+            removalError = "Unable to remove instance: \(error.localizedDescription) Try again."
+            removalFailureCount += 1
+        }
     }
 }
 
