@@ -4,11 +4,49 @@ import Observation
 @MainActor
 @Observable
 final class CaptureComposerModel {
-    var text = DemoMode.isEnabled ? DemoData.captureText : ""
-    var transcript = ""
-    var usedDictation = false
+    struct Selection: Equatable {
+        let profileID: UUID?
+        let destination: CaptureDestination
+        let date: Date
+    }
+
+    struct AcceptedCapture {
+        let profileID: UUID
+        let profileName: String
+        let destination: CaptureDestination
+        let date: String
+        let summary: String
+
+        var attribution: String {
+            let target = destination == .dailyLog ? "Daily Log for \(date)" : "Brain"
+            return "\(profileName) · \(target)"
+        }
+    }
+
+    var text = DemoMode.isEnabled ? DemoData.captureText : "" {
+        didSet { if text != oldValue { draftRevision &+= 1 } }
+    }
+    var transcript = "" {
+        didSet { if transcript != oldValue { draftRevision &+= 1 } }
+    }
+    var usedDictation = false {
+        didSet { if usedDictation != oldValue { draftRevision &+= 1 } }
+    }
+    var selection: Selection? {
+        didSet { if selection != oldValue { draftRevision &+= 1 } }
+    }
+    private(set) var acceptedCapture: AcceptedCapture?
+    private var draftRevision: UInt64 = 0
+    private var submitID: UUID?
     private(set) var isSubmitting = false
     private(set) var message: (String, InlineMessage.Kind)?
+
+    // Dictation flows into the composer only. Clearing a submitted transcript must
+    // never feed back through the controller and replace a newer typed draft.
+    func receiveTranscript(_ value: String) {
+        transcript = value
+        text = value
+    }
 
     func submit(
         to instance: PortOSInstance,
@@ -20,11 +58,23 @@ final class CaptureComposerModel {
         guard let baseURL = instance.baseURL, !isSubmitting else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        selection = Selection(profileID: instance.localID, destination: destination, date: date)
+        let requestID = UUID()
+        submitID = requestID
+        let revision = draftRevision
+        let profileID = instance.localID
+        let profileName = instance.displayName
+        let submittedDate = Self.dateString(date)
+        let submittedDictation = usedDictation
         isSubmitting = true
         message = nil
-        defer { isSubmitting = false }
+        acceptedCapture = nil
+        defer {
+            if submitID == requestID { isSubmitting = false }
+        }
         do {
-            let password = try credentials.password(for: instance.localID)
+            let password = try credentials.password(for: profileID)
+            let summary: String
             switch destination {
             case .brain:
                 let response = try await api.invokeAction(
@@ -33,34 +83,47 @@ final class CaptureComposerModel {
                     baseURL: baseURL,
                     password: password
                 )
-                guard accept(response, fallback: "Could not capture to Brain.") else { return }
-                message = (response.result.summary ?? "Captured to Brain.", .success)
+                guard submitID == requestID,
+                      accept(response, fallback: "Could not capture to Brain.") else { return }
+                summary = response.result.summary ?? "Captured to Brain."
             case .dailyLog:
-                let date = Self.dateString(date)
-                if usedDictation {
+                if submittedDictation {
                     let response = try await api.invokeAction(
                         id: "daily_log_append",
-                        arguments: ["text": .string(trimmed), "date": .string(date)],
+                        arguments: ["text": .string(trimmed), "date": .string(submittedDate)],
                         baseURL: baseURL,
                         password: password
                     )
-                    guard accept(response, fallback: "Could not add to the daily log.") else { return }
-                    message = (response.result.summary ?? "Added to the daily log.", .success)
+                    guard submitID == requestID,
+                          accept(response, fallback: "Could not add to the daily log.") else { return }
+                    summary = response.result.summary ?? "Added to the daily log."
                 } else {
                     let response = try await api.appendDailyLog(
                         text: trimmed,
-                        date: date,
+                        date: submittedDate,
                         source: "text",
                         baseURL: baseURL,
                         password: password
                     )
-                    message = ("Added to the daily log for \(response.date).", .success)
+                    summary = "Added to the daily log for \(response.date)."
                 }
             }
-            text = ""
-            transcript = ""
-            usedDictation = false
+            guard submitID == requestID else { return }
+            acceptedCapture = AcceptedCapture(
+                profileID: profileID,
+                profileName: profileName,
+                destination: destination,
+                date: submittedDate,
+                summary: summary
+            )
+            message = (summary, .success)
+            if draftRevision == revision {
+                text = ""
+                transcript = ""
+                usedDictation = false
+            }
         } catch {
+            guard submitID == requestID else { return }
             message = (error.localizedDescription, .error)
         }
     }

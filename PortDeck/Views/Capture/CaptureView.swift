@@ -22,6 +22,11 @@ struct CaptureView: View {
                         ActiveInstancePicker(instances: instances)
                         captureComposer
                         if let error = dictation.errorMessage { InlineMessage(text: error, kind: .error) }
+                        if let receipt = composer.acceptedCapture {
+                            Text("Accepted by \(receipt.attribution)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         if let message = composer.message { InlineMessage(text: message.0, kind: message.1) }
                     }
                 }
@@ -30,15 +35,22 @@ struct CaptureView: View {
             .background(Color.portCanvas)
             .navigationTitle("Capture")
             .onChange(of: dictation.transcript) {
-                composer.transcript = dictation.transcript
-                composer.text = dictation.transcript
+                composer.receiveTranscript(dictation.transcript)
             }
-            .onChange(of: composer.transcript) { dictation.transcript = composer.transcript }
+            .onChange(of: captureSelection, initial: true) { _, selection in
+                composer.selection = selection
+            }
             .onDisappear { dictation.stop() }
             .task {
                 if appState.selectedInstanceID == nil, let first = instances.first { appState.select(first) }
             }
         }
+    }
+
+    private var captureSelection: CaptureComposerModel.Selection {
+        .init(profileID: selectedInstance?.localID,
+              destination: appState.captureDestination,
+              date: appState.dailyLogCaptureDate)
     }
 
     private var captureComposer: some View {

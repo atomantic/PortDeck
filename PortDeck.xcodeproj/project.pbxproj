@@ -55,6 +55,7 @@
 		B83C53486101E0EB7E372EA9 /* TaskComposerModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BA435007836AFD04C376A9 /* TaskComposerModelTests.swift */; };
 		BB56105ADB9E43627CB75201 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3193777185FA502A6EE376EC /* ScreenshotTests.swift */; };
 		C284DBE197D76509603799DB /* ActionArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03690F5A793D3A31C884C828 /* ActionArgumentsTests.swift */; };
+		CFB0AA279A016D118778EAFD /* CaptureComposerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B5EC9EA3A3CED1D0DE181D /* CaptureComposerUITests.swift */; };
 		D13D348D24B5E4648149AAE9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 030713827E7F8758FE90A8B3 /* Assets.xcassets */; };
 		D8A706FAEDBE03BEA9529D09 /* ActiveInstancePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FDD2C92374F8B702D2A168 /* ActiveInstancePicker.swift */; };
 		DBB4EDCEDB4BEEB2299A3D1B /* ActionParameterForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E786AF3C07063373E5B5E13 /* ActionParameterForm.swift */; };
@@ -142,6 +143,7 @@
 		CE3A2E177F6BDD305E318E13 /* PreviewAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = PreviewAssets.xcassets; sourceTree = "<group>"; };
 		D86E88594C42166D3ECB87D6 /* PaletteActionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteActionFixture.swift; sourceTree = "<group>"; };
 		D99D3575365329B47833DA9B /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
+		D9B5EC9EA3A3CED1D0DE181D /* CaptureComposerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureComposerUITests.swift; sourceTree = "<group>"; };
 		DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetSyncCoordinator.swift; sourceTree = "<group>"; };
 		DFC59D5552215A6B04E8D411 /* PaletteActionBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteActionBehavior.swift; sourceTree = "<group>"; };
 		E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -266,6 +268,7 @@
 		64F4D5B2E7DFF4CD1196DA6C /* PortDeckUITests */ = {
 			isa = PBXGroup;
 			children = (
+				D9B5EC9EA3A3CED1D0DE181D /* CaptureComposerUITests.swift */,
 				2CFA00746B1E54D68DE886E0 /* PortDeckUITests.swift */,
 				3193777185FA502A6EE376EC /* ScreenshotTests.swift */,
 			);
@@ -461,6 +464,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CFB0AA279A016D118778EAFD /* CaptureComposerUITests.swift in Sources */,
 				9934CC918B9C43A6F20BECDA /* PortDeckUITests.swift in Sources */,
 				BB56105ADB9E43627CB75201 /* ScreenshotTests.swift in Sources */,
 			);
