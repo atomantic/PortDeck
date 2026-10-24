@@ -16,6 +16,7 @@ struct InstanceDetailView: View {
     @State private var busyPeerID: String?
     @State private var message: String?
     @State private var removalError: String?
+    @State private var removalFailureCount = 0
     @State private var showingEdit = false
     @State private var showingAddPeer = false
     @State private var showingDeleteConfirmation = false
@@ -39,8 +40,8 @@ struct InstanceDetailView: View {
                 }
                 .padding(16)
             }
-            .onChange(of: removalError) { _, error in
-                if error != nil { proxy.scrollTo("fleetRemovalError", anchor: .top) }
+            .onChange(of: removalFailureCount) { _, _ in
+                proxy.scrollTo("fleetRemovalError", anchor: .top)
             }
         }
         .background(Color.portCanvas)
@@ -397,6 +398,7 @@ struct InstanceDetailView: View {
             dismiss()
         } catch {
             removalError = "Unable to remove instance: \(error.localizedDescription) Try again."
+            removalFailureCount += 1
         }
     }
 }
