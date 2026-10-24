@@ -5,11 +5,8 @@ struct CaptureView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \PortOSInstance.addedAt) private var instances: [PortOSInstance]
 
-    @State private var text = DemoMode.isEnabled ? DemoData.captureText : ""
+    @State private var composer = CaptureComposerModel()
     @State private var dictation = DictationController()
-    @State private var usedDictation = false
-    @State private var isSubmitting = false
-    @State private var message: (String, InlineMessage.Kind)?
 
     private var selectedInstance: PortOSInstance? {
         instances.first { $0.localID == appState.selectedInstanceID } ?? instances.first
@@ -25,14 +22,18 @@ struct CaptureView: View {
                         ActiveInstancePicker(instances: instances)
                         captureComposer
                         if let error = dictation.errorMessage { InlineMessage(text: error, kind: .error) }
-                        if let message { InlineMessage(text: message.0, kind: message.1) }
+                        if let message = composer.message { InlineMessage(text: message.0, kind: message.1) }
                     }
                 }
                 .padding(16)
             }
             .background(Color.portCanvas)
             .navigationTitle("Capture")
-            .onChange(of: dictation.transcript) { text = dictation.transcript }
+            .onChange(of: dictation.transcript) {
+                composer.transcript = dictation.transcript
+                composer.text = dictation.transcript
+            }
+            .onChange(of: composer.transcript) { dictation.transcript = composer.transcript }
             .onDisappear { dictation.stop() }
             .task {
                 if appState.selectedInstanceID == nil, let first = instances.first { appState.select(first) }
@@ -62,12 +63,12 @@ struct CaptureView: View {
                 }
 
                 ZStack(alignment: .topLeading) {
-                    TextEditor(text: $text)
+                    TextEditor(text: $composer.text)
                         .scrollContentBackground(.hidden)
                         .padding(8)
                         .frame(minHeight: 210)
                         .background(Color.portCanvas, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    if text.isEmpty {
+                    if composer.text.isEmpty {
                         Text(appState.captureDestination == .brain
                              ? "Capture a thought, idea, reminder, or note…"
                              : "What happened today?")
@@ -81,8 +82,8 @@ struct CaptureView: View {
                 HStack(spacing: 12) {
                     Button {
                         Task {
-                            await dictation.toggle(initialText: text)
-                            if dictation.isRecording { usedDictation = true }
+                            await dictation.toggle(initialText: composer.text)
+                            if dictation.isRecording { composer.usedDictation = true }
                         }
                     } label: {
                         Label(dictation.isRecording ? "Stop" : "Dictate", systemImage: dictation.isRecording ? "stop.fill" : "mic.fill")
@@ -93,16 +94,25 @@ struct CaptureView: View {
 
                     Button {
                         dictation.stop()
-                        Task { await submit() }
+                        Task {
+                            guard let instance = selectedInstance else { return }
+                            await composer.submit(
+                                to: instance,
+                                destination: appState.captureDestination,
+                                date: appState.dailyLogCaptureDate,
+                                api: appState.api,
+                                credentials: appState.credentials
+                            )
+                        }
                     } label: {
                         HStack {
-                            if isSubmitting { ProgressView().tint(.white) }
+                            if composer.isSubmitting { ProgressView().tint(.white) }
                             Label("Send", systemImage: "arrow.up.circle.fill")
                         }
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(isSubmitting || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(composer.isSubmitting || composer.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 Text("Current dictation is transcribed on this device and sends text. A future opt-in mode may send audio directly to the selected PortOS instance for processing.")
                     .font(.caption)
@@ -124,62 +134,5 @@ struct CaptureView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
         }
-    }
-
-    @MainActor
-    private func submit() async {
-        guard let instance = selectedInstance, let baseURL = instance.baseURL else { return }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        isSubmitting = true
-        message = nil
-        defer { isSubmitting = false }
-        do {
-            let password = try appState.credentials.password(for: instance.localID)
-            switch appState.captureDestination {
-            case .brain:
-                let response = try await appState.api.invokeAction(
-                    id: "brain_capture",
-                    arguments: ["text": .string(trimmed)],
-                    baseURL: baseURL,
-                    password: password
-                )
-                message = (response.result.summary ?? "Captured to Brain.", .success)
-            case .dailyLog:
-                let date = Self.dateString(appState.dailyLogCaptureDate)
-                if usedDictation {
-                    let response = try await appState.api.invokeAction(
-                        id: "daily_log_append",
-                        arguments: ["text": .string(trimmed), "date": .string(date)],
-                        baseURL: baseURL,
-                        password: password
-                    )
-                    message = (response.result.summary ?? "Added to the daily log.", .success)
-                } else {
-                    let response = try await appState.api.appendDailyLog(
-                        text: trimmed,
-                        date: date,
-                        source: "text",
-                        baseURL: baseURL,
-                        password: password
-                    )
-                    message = ("Added to the daily log for \(response.date).", .success)
-                }
-            }
-            text = ""
-            dictation.transcript = ""
-            usedDictation = false
-        } catch {
-            message = (error.localizedDescription, .error)
-        }
-    }
-
-    private static func dateString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = .current
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
     }
 }
