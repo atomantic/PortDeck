@@ -60,6 +60,7 @@
 		DBB4EDCEDB4BEEB2299A3D1B /* ActionParameterForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E786AF3C07063373E5B5E13 /* ActionParameterForm.swift */; };
 		DCEB18683557E26DB137634C /* ActionResultDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89636D4534E45BF9698331D /* ActionResultDisplay.swift */; };
 		E22BEA5680C61A40EC53F28C /* DictationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34429E825AA3AE3B5901EC9B /* DictationController.swift */; };
+		E3469CC56696E38B392AFDD6 /* KeychainCredentialStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219DBE405D55882896587260 /* KeychainCredentialStoreTests.swift */; };
 		E83422B887F3F213577822E7 /* ICloudFleetSyncStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE28A9A2AD442F01E40A543C /* ICloudFleetSyncStore.swift */; };
 		EE8AF231B8AF215492D03C55 /* PortOSEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B564B4DDC3A549F757F70833 /* PortOSEndpoint.swift */; };
 		F781BAE78FB31434158E2C07 /* Color+Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B1938EA3EDA7D90928CA84 /* Color+Brand.swift */; };
@@ -93,6 +94,7 @@
 		11E2276460E8A3BD70AF6C41 /* DailyLogReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogReminderTests.swift; sourceTree = "<group>"; };
 		1B175D3721B7DE9D5865119D /* PortPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortPanel.swift; sourceTree = "<group>"; };
 		1EEE6276C0CE74A3AC23C8CD /* AddFederationPeerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFederationPeerView.swift; sourceTree = "<group>"; };
+		219DBE405D55882896587260 /* KeychainCredentialStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainCredentialStoreTests.swift; sourceTree = "<group>"; };
 		222601337C745F82DD4E1962 /* InstanceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceDetailView.swift; sourceTree = "<group>"; };
 		257B4C2EDB0AE72621B30F07 /* CaptureComposerModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureComposerModelTests.swift; sourceTree = "<group>"; };
 		26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudFleetSyncStoreTests.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */,
 				26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */,
 				2F2CEB20C6B541ED301A25BD /* InMemoryKeychainItemClient.swift */,
+				219DBE405D55882896587260 /* KeychainCredentialStoreTests.swift */,
 				C5407640AB5FFFD230780CCF /* PaletteActionBehaviorTests.swift */,
 				D86E88594C42166D3ECB87D6 /* PaletteActionFixture.swift */,
 				533BA6A44D7B184344EE5515 /* PortOSAPIClientTests.swift */,
@@ -478,6 +481,7 @@
 				13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */,
 				2452C87D2461089ABE6B329C /* ICloudFleetSyncStoreTests.swift in Sources */,
 				804FE19BF322E51D845173D6 /* InMemoryKeychainItemClient.swift in Sources */,
+				E3469CC56696E38B392AFDD6 /* KeychainCredentialStoreTests.swift in Sources */,
 				FEE37A3CBA4F4C752A4FCE85 /* PaletteActionBehaviorTests.swift in Sources */,
 				06D1F82A8D5257FF2A7D6ED3 /* PaletteActionFixture.swift in Sources */,
 				4713606B18A8D70DA7B763ED /* PortOSAPIClientTests.swift in Sources */,
