@@ -28,6 +28,10 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
       - name: Verify deployment Python bootstrap and icon preparation
         run: |
           ./scripts/bootstrap_deploy_python.sh
@@ -149,6 +153,10 @@ jobs:
         with:
           go-version: '1.27.3'
           cache-dependency-path: Native/TailcatBridge/go.sum
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
       - name: Create temporary ASC key file
         env:
