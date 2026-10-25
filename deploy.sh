@@ -36,25 +36,9 @@ if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
     exit 1
 fi
 
-# Strip alpha from app icons before archiving; App Store Connect rejects icons
-# with transparency. This mirrors the MortalLoom release preflight.
-python3 -c "
-from PIL import Image
-from pathlib import Path
-fixed = False
-for path in Path('PortDeck/Assets.xcassets/AppIcon.appiconset').glob('*.png'):
-    image = Image.open(path)
-    if image.mode == 'RGBA':
-        background = Image.new('RGB', image.size, (0, 0, 0))
-        background.paste(image, mask=image.split()[3])
-        background.save(path)
-        fixed = True
-    elif image.mode != 'RGB':
-        image.convert('RGB').save(path)
-        fixed = True
-if fixed:
-    print('🎨 Stripped alpha from app icons')
-"
+# Bootstrap only project-local Python dependencies; never install into the host Python.
+DEPLOY_PYTHON="$(./scripts/bootstrap_deploy_python.sh)"
+"$DEPLOY_PYTHON" scripts/prepare_app_icons.py PortDeck/Assets.xcassets/AppIcon.appiconset
 
 mkdir -p ~/.private_keys
 KEY_FILENAME="AuthKey_${APPSTORE_API_KEY_ID}.p8"
@@ -403,7 +387,8 @@ echo "✅ Build $NEW_BUILD submitted to TestFlight."
 echo "🔗 https://appstoreconnect.apple.com/teams/69a6de6e-c0f9-47e3-e053-5b8c7c11a4d1/apps/6792223291/testflight"
 
 git add project.yml "$PROJECT/project.pbxproj" PortDeck/Assets.xcassets/AppIcon.appiconset
-git commit -m "build: bump to build $NEW_BUILD"
+# This local workflow already uploaded; its bookkeeping push must not upload again.
+git commit -m "build: bump to build $NEW_BUILD [skip ci]"
 DEPLOY_SUCCESS=true
 echo "📝 Committed build number bump"
 git pull --rebase --autostash

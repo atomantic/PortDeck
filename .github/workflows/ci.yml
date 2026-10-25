@@ -8,6 +8,9 @@ on:
       - testflight
       - 'release/**'
 
+permissions:
+  contents: read
+
 env:
   IPHONEOS_DEPLOYMENT_TARGET: ${{ vars.IPHONEOS_DEPLOYMENT_TARGET }}
 
@@ -24,6 +27,15 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: 'latest-stable'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify deployment Python bootstrap and icon preparation
+        run: |
+          ./scripts/bootstrap_deploy_python.sh
+          .venv-deploy/bin/python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Install xcbeautify
         run: |
@@ -119,9 +131,15 @@ jobs:
     runs-on: macos-latest
     name: Build and Deploy to TestFlight
     needs: ci
-    # Main is shipped by deploy.sh; keeping CI deployment on release branches
-    # avoids uploading the same build twice when deploy.sh pushes its bump.
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/testflight' || startsWith(github.ref, 'refs/heads/release/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testflight' || startsWith(github.ref, 'refs/heads/release/'))
+    concurrency:
+      group: portdeck-testflight
+      cancel-in-progress: false
+    timeout-minutes: 90
+    env:
+      APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.TEAM_ID }}
 
     steps:
       - uses: actions/checkout@v6
@@ -136,6 +154,38 @@ jobs:
           go-version: '1.27.3'
           cache-dependency-path: Native/TailcatBridge/go.sum
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Create temporary ASC key file
+        env:
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          APPSTORE_API_PRIVATE_KEY_PATH: ${{ runner.temp }}/portdeck-asc/AuthKey.p8
+        run: |
+          set -euo pipefail
+          test -n "$APPSTORE_API_PRIVATE_KEY"
+          test -n "$APPSTORE_API_KEY_ID"
+          test -n "$APPSTORE_ISSUER_ID"
+          test -n "$TEAM_ID"
+          umask 077
+          mkdir -p "$(dirname "$APPSTORE_API_PRIVATE_KEY_PATH")"
+          printf '%s\n' "$APPSTORE_API_PRIVATE_KEY" > "$APPSTORE_API_PRIVATE_KEY_PATH"
+          echo "APPSTORE_API_PRIVATE_KEY_PATH=$APPSTORE_API_PRIVATE_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Prepare deployment dependencies, icons and unique build number
+        id: build
+        run: |
+          set -euo pipefail
+          ./scripts/bootstrap_deploy_python.sh
+          .venv-deploy/bin/python3 scripts/prepare_app_icons.py PortDeck/Assets.xcassets/AppIcon.appiconset
+          CURRENT_BUILD=$(awk '/CURRENT_PROJECT_VERSION:/ {print $2; exit}' project.yml)
+          BUILD_NUMBER=$(python3 scripts/testflight_build.py next "$CURRENT_BUILD")
+          sed -i '' "s/CURRENT_PROJECT_VERSION: $CURRENT_BUILD/CURRENT_PROJECT_VERSION: $BUILD_NUMBER/" project.yml
+          echo "number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "### TestFlight build $BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build native Tailcat transport and generate project
         run: |
           set -euo pipefail
@@ -143,16 +193,7 @@ jobs:
           ./scripts/build_tailcat_bridge.sh
           xcodegen generate
 
-      - name: Create ASC key file
-        env:
-          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-        run: |
-          cat > "$GITHUB_WORKSPACE/AuthKey.p8" <<EOF
-          $APPSTORE_API_PRIVATE_KEY
-          EOF
-          chmod 600 "$GITHUB_WORKSPACE/AuthKey.p8"
-
-      - name: Archive iOS App (unsigned)
+      - name: Archive iOS app with automatic signing
         run: |
           if [ -n "$IPHONEOS_DEPLOYMENT_TARGET" ]; then
             DEPLOYMENT_ARGS=("IPHONEOS_DEPLOYMENT_TARGET=$IPHONEOS_DEPLOYMENT_TARGET")
@@ -167,9 +208,10 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath build/PortDeck.xcarchive \
             "${DEPLOYMENT_ARGS[@]}" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APPSTORE_API_PRIVATE_KEY_PATH" \
+            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
             archive
 
       - name: Verify archived privacy manifest
@@ -202,9 +244,9 @@ jobs:
             -exportOptionsPlist exportOptions.plist \
             -exportPath build/export \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$GITHUB_WORKSPACE/AuthKey.p8" \
-            -authenticationKeyID "${{ secrets.APPSTORE_API_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.APPSTORE_ISSUER_ID }}"
+            -authenticationKeyPath "$APPSTORE_API_PRIVATE_KEY_PATH" \
+            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
 
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v5
@@ -213,3 +255,19 @@ jobs:
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: Wait for Apple processing
+        run: python3 scripts/testflight_build.py wait "${{ steps.build.outputs.number }}"
+
+      - name: Report deployment result
+        if: always()
+        env:
+          BUILD_NUMBER: ${{ steps.build.outputs.number }}
+          RESULT: ${{ job.status }}
+        run: |
+          echo "Build ${BUILD_NUMBER:-not allocated}: $RESULT" >> "$GITHUB_STEP_SUMMARY"
+          echo "Inspect https://appstoreconnect.apple.com/apps/6792223291/testflight" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary signing material
+        if: always()
+        run: rm -f "${{ runner.temp }}/portdeck-asc/AuthKey.p8"

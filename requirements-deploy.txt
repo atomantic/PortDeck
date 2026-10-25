@@ -1,0 +1,2 @@
+# Last Pillow series supporting the macOS system Python 3.9.
+Pillow==11.3.0

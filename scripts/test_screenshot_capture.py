@@ -60,6 +60,10 @@ class ScreenshotCaptureTests(unittest.TestCase):
                                 str(self.project / "fallback-config.json"))
         (self.project / "take_screenshots.sh").write_text(script)
         shutil.copy(ROOT / "scripts/publish_screenshot_capture.py", self.project / "scripts")
+        # Native compilation is outside this screenshot publication contract.
+        bridge = self.project / "scripts/build_tailcat_bridge.sh"
+        bridge.write_text("#!/bin/bash\nexit 0\n")
+        bridge.chmod(0o755)
         binaries = self.project / "bin"
         binaries.mkdir()
         for name in ("xcrun", "xcodegen", "xcodebuild"):
