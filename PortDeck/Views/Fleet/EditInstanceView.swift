@@ -28,14 +28,20 @@ struct EditInstanceView: View {
             Form {
                 Section {
                     TextField("Local label", text: $localLabel)
-                    TextField("Endpoint", text: $endpoint)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
+                    if instance.usesTailcat {
+                        Label("Private Tailcat connection", systemImage: "lock.shield")
+                    } else {
+                        TextField("Endpoint", text: $endpoint)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                    }
                 } header: {
                     Text("PortDeck")
                 } footer: {
-                    Text("The local label only changes this phone. The endpoint must be a Tailscale-reachable HTTP or HTTPS URL.")
+                    Text(instance.usesTailcat
+                         ? "The server identity is pinned by your private pairing. To pair a different identity, remove this profile and add the new connection."
+                         : "The local label only changes this phone. The endpoint must be a reachable HTTP or HTTPS URL.")
                 }
 
                 Section {
@@ -88,6 +94,7 @@ struct EditInstanceView: View {
                 instance.remoteName = identity.name ?? trimmedRemoteName
             }
             let health = try await appState.api.discover(baseURL: baseURL)
+            if instance.usesTailcat && !health.authRequired { throw TailcatError.passwordRequired }
             if health.authRequired {
                 _ = try await appState.api.topology(baseURL: baseURL, password: password)
                 try appState.credentials.setPassword(password, for: instance.localID)

@@ -74,7 +74,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Label("Direct over Tailscale", systemImage: "network.badge.shield.half.filled")
+                    Label("Direct or private Tailcat connections", systemImage: "network.badge.shield.half.filled")
                     Label("Per-instance passwords in Keychain", systemImage: "key.fill")
                     Label("HTTP and HTTPS on port 5555", systemImage: "arrow.left.arrow.right")
                 } header: {
@@ -116,6 +116,8 @@ struct SettingsView: View {
                         Text("Optional. Fleet connection profiles and passwords use secure iCloud Keychain items for this app. SwiftData remains the local working copy. Turning sync off keeps device-only copies and leaves existing iCloud copies available to other opted-in devices.")
                     }
                 }
+
+                if !appState.isOfflineDemo { TailcatSettingsSection() }
 
                 Section("Privacy") {
                     Label("No PortDeck-operated servers", systemImage: "server.rack")

@@ -111,7 +111,7 @@ struct FleetView: View {
                 .frame(width: 52, height: 52)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Your tailnet, one deck")
+                    Text("Your fleet, one deck")
                         .font(.headline)
                     Text(instances.isEmpty
                          ? "Connect your first PortOS host to begin."
@@ -134,7 +134,7 @@ struct FleetView: View {
                 VStack(spacing: 7) {
                     Text("Connect PortOS")
                         .font(.title3.weight(.bold))
-                    Text("Use the MagicDNS name or Tailscale IP of a PortOS host. PortDeck discovers its identity before asking for credentials.")
+                    Text("Connect using a reachable PortOS endpoint or pair a private Tailcat connection.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -269,7 +269,7 @@ private struct InstanceCard: View {
                                     .foregroundStyle(Color.portAccent)
                             }
                         }
-                        Text(instance.baseURL?.host ?? instance.baseURLString)
+                        Text(instance.usesTailcat ? "Private Tailcat connection" : (instance.baseURL?.host ?? instance.baseURLString))
                             .font(.caption.monospaced())
                             .foregroundStyle(.secondary)
                             .lineLimit(1)

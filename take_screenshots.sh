@@ -121,6 +121,7 @@ echo "   Output: $SCREENSHOTS_DIR/en/{device}/"
 
 echo "⚙️  Generating Xcode project..."
 cd "$PROJECT_DIR"
+./scripts/build_tailcat_bridge.sh
 xcodegen generate --quiet
 
 for device_spec in "${DEVICES[@]}"; do

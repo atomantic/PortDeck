@@ -64,6 +64,7 @@ if [ ! -f ~/.private_keys/"$KEY_FILENAME" ]; then
 fi
 
 PROJECT="PortDeck.xcodeproj"
+./scripts/build_tailcat_bridge.sh
 BUILD_DIR="$SCRIPT_DIR/build"
 
 # Scheme names

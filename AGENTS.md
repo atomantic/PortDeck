@@ -11,6 +11,7 @@ PortDeck is the iOS companion app for PortOS. `PortDeck` is the technical projec
 ## Build commands
 
 ```bash
+./scripts/build_tailcat_bridge.sh # Go 1.27.3+, Xcode; builds the pinned native dependency
 xcodegen generate
 
 xcodebuild build -project PortDeck.xcodeproj -scheme PortDeck \

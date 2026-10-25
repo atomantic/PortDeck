@@ -160,7 +160,7 @@ struct PortOSAPIClient: Sendable {
     private let decoder = JSONDecoder()
     private let encoder = JSONEncoder()
 
-    init(transport: any HTTPTransport = OriginBoundTransport()) {
+    init(transport: any HTTPTransport = TailcatRoutingTransport()) {
         self.transport = transport
     }
 

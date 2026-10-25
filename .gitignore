@@ -46,3 +46,6 @@ AuthKey*.p8
 # App Store screenshot output and transient test configuration
 screenshots/
 .screenshot_config.json
+
+# Reproducible, locally built Go mobile bridge (sources and lockfile are tracked).
+Vendor/PortDeckTailcat.xcframework/

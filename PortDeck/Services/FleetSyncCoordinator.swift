@@ -7,9 +7,17 @@ struct FleetSyncCoordinator {
     let credentials: any CredentialStore
 
     func synchronize(modelContext: ModelContext) throws -> FleetSyncSummary {
-        let localInstances = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
+        // A pairing is device-owned. Neither its capability nor its routing
+        // placeholder should be offered to another device through fleet sync.
+        let allLocalInstances = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
+        let protectedIDs = Set(allLocalInstances.filter(\.usesTailcat).map(\.localID))
+        let localInstances = allLocalInstances.filter { !$0.usesTailcat }
         let localByID = Dictionary(uniqueKeysWithValues: localInstances.map { ($0.localID, $0) })
-        var winners = Dictionary(uniqueKeysWithValues: try store.loadProfiles().map { ($0.localID, $0) })
+        var winners = Dictionary(uniqueKeysWithValues: try store.loadProfiles().filter {
+            guard !protectedIDs.contains($0.localID) else { return false }
+            guard let url = URL(string: $0.baseURLString) else { return true }
+            return !TailcatEndpoint.isTailcat(url)
+        }.map { ($0.localID, $0) })
 
         for instance in localInstances {
             let local = SyncedInstanceProfile(instance: instance)
@@ -46,6 +54,7 @@ struct FleetSyncCoordinator {
     }
 
     func recordDeletion(_ instance: PortOSInstance) throws {
+        guard !instance.usesTailcat else { return }
         var profiles = Dictionary(uniqueKeysWithValues: try store.loadProfiles().map { ($0.localID, $0) })
         profiles[instance.localID] = SyncedInstanceProfile(instance: instance, deletedAt: .now)
         try store.saveProfiles(Array(profiles.values))

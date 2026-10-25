@@ -67,6 +67,7 @@ final class PortOSInstance {
     }
 
     var baseURL: URL? { URL(string: baseURLString) }
+    var usesTailcat: Bool { baseURL.map(TailcatEndpoint.isTailcat) ?? false }
 
     var displayName: String {
         let trimmedLabel = localLabel.trimmingCharacters(in: .whitespacesAndNewlines)

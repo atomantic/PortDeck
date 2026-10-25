@@ -27,7 +27,19 @@ jobs:
 
       - name: Install xcbeautify
         run: |
-          brew install xcbeautify
+          brew install xcbeautify xcodegen
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: Native/TailcatBridge/go.sum
+
+      - name: Verify and build native Tailcat transport
+        run: |
+          set -euo pipefail
+          (cd Native/TailcatBridge && go test -race -tags="$(cat build-tags.txt)" ./...)
+          ./scripts/build_tailcat_bridge.sh
+          xcodegen generate
 
       - name: List available simulators and runtimes
         run: |
@@ -66,6 +78,7 @@ jobs:
             -project PortDeck.xcodeproj \
             -scheme PortDeck \
             -only-testing:PortDeckTests/KeychainCredentialStoreTests/testNativeDeviceOnlyRoundTripUsesUniqueServiceAndCleansUpItsOwnItems \
+            -only-testing:PortDeckTests/TailcatTransportTests/testNativeTailcatKeychainRoundTrip \
             -destination "$DESTINATION" \
             -configuration Debug \
             -derivedDataPath build \
@@ -80,7 +93,7 @@ jobs:
           import json
           with open("build/native-keychain-summary.json") as result:
               summary = json.load(result)
-          assert summary["passedTests"] == 1, summary
+          assert summary["passedTests"] == 2, summary
           assert summary["skippedTests"] == 0, summary
           assert summary["failedTests"] == 0, summary
           PY
@@ -91,6 +104,7 @@ jobs:
             -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredAndExited \
             -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredFromSettingsWithoutLogin \
             -only-testing:PortDeckUITests/PortDeckUITests/testDailyLogReminderSettingIsAvailable \
+            -only-testing:PortDeckUITests/PortDeckUITests/testTailcatSetupRejectsAnInvalidSecretLocally \
             -destination "$DESTINATION" \
             -destination-timeout 60 \
             -configuration Debug \
@@ -117,6 +131,18 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.3'
+          cache-dependency-path: Native/TailcatBridge/go.sum
+
+      - name: Build native Tailcat transport and generate project
+        run: |
+          set -euo pipefail
+          brew install xcodegen
+          ./scripts/build_tailcat_bridge.sh
+          xcodegen generate
+
       - name: Create ASC key file
         env:
           APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
@@ -129,9 +155,9 @@ jobs:
       - name: Archive iOS App (unsigned)
         run: |
           if [ -n "$IPHONEOS_DEPLOYMENT_TARGET" ]; then
-            DEPLOYMENT_TARGET="IPHONEOS_DEPLOYMENT_TARGET=$IPHONEOS_DEPLOYMENT_TARGET"
+            DEPLOYMENT_ARGS=("IPHONEOS_DEPLOYMENT_TARGET=$IPHONEOS_DEPLOYMENT_TARGET")
           else
-            DEPLOYMENT_TARGET=""
+            DEPLOYMENT_ARGS=()
           fi
 
           xcodebuild \
@@ -140,7 +166,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/PortDeck.xcarchive \
-            $DEPLOYMENT_TARGET \
+            "${DEPLOYMENT_ARGS[@]}" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

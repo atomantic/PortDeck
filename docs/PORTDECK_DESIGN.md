@@ -27,6 +27,14 @@ The selected Fleet instance is the explicit destination for Capture, Tasks, and 
 
 ## Connection lifecycle
 
+The optional [Tailcat transport](TAILCAT.md) pairs a full, privately exchanged
+capability to the existing PortOS remote ingress on 5565. It uses an embedded Go
+library and authenticated local proxy for API and remote-desktop traffic. Those
+pairings, passwords, and the phone's stable client identity remain device-only;
+they are excluded from fleet sync. Existing direct HTTP/HTTPS profiles follow
+the lifecycle below. The first Tailcat release is an app-scoped prototype;
+server-side device admission/revocation is tracked separately.
+
 1. Normalize the user-entered HTTP/HTTPS endpoint and default it to port 5555.
 2. Call public `GET /api/system/health` without credentials.
 3. Present the server's stable identity, display name, version, scheme, and auth requirement.

@@ -7,7 +7,7 @@
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>PortOS uses on-device speech recognition to turn dictation into text before sending it to your PortOS instance.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>PortOS connects directly to the PortOS instances on your Tailscale network.</string>
+	<string>PortOS connects to your private instances directly or through an encrypted Tailcat connection.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- PortOS supports user-configured HTTP endpoints on private Tailscale networks. -->
