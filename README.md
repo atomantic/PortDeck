@@ -129,8 +129,16 @@ Run the screenshot publishing regression tests without simulators or Apple crede
 `./deploy.sh` performs the MortalLoom-standard local TestFlight workflow. It requires a clean working tree and the App Store Connect credentials in `.env`, runs tests unless `--skip-tests` is supplied, increments the build with rollback on failure, makes a signed App Store archive, uploads through `altool --upload-package`, and commits, rebases, and pushes the successful build-number bump.
 
 Deployment creates an ignored `.venv-deploy` environment on first use and installs
-`requirements-deploy.txt` there (Python 3.9+ with `venv` and access to PyPI required).
-It reuses the pinned Pillow installation on later runs without changing global Python packages.
+`requirements-deploy.txt` there (Python 3.11–3.15 with `venv` and access to PyPI required;
+3.13 is recommended and pinned in CI). The bootstrap launcher itself works with
+macOS system Python 3.9. It discovers an installed compatible interpreter, preferring
+3.13 (including the standard Homebrew location), or uses the executable specified by
+`PORTDECK_DEPLOY_PYTHON`. Install Python separately if none is available; the bootstrap
+never installs a system interpreter or global packages. A compatible environment
+with the exact Pillow pin is reused offline. An older or incompatible project venv
+is replaced at its final path, retaining the previous environment until verification
+succeeds and restoring it if installation fails. Concurrent bootstrap attempts fail
+clearly rather than changing the same environment together.
 Run the icon preflight regression with `./scripts/bootstrap_deploy_python.sh` followed by
 `.venv-deploy/bin/python3 -m unittest discover -s scripts -p 'test_prepare_app_icons.py'`.
 
