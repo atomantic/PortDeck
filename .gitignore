@@ -49,3 +49,6 @@ screenshots/
 
 # Reproducible, locally built Go mobile bridge (sources and lockfile are tracked).
 Vendor/PortDeckTailcat.xcframework/
+
+# Isolated deployment Python dependencies
+.venv-deploy/

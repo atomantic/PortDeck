@@ -127,3 +127,19 @@ Run the screenshot publishing regression tests without simulators or Apple crede
 ## Deployment
 
 `./deploy.sh` performs the MortalLoom-standard local TestFlight workflow. It requires a clean working tree and the App Store Connect credentials in `.env`, runs tests unless `--skip-tests` is supplied, increments the build with rollback on failure, makes a signed App Store archive, uploads through `altool --upload-package`, and commits, rebases, and pushes the successful build-number bump.
+
+Deployment creates an ignored `.venv-deploy` environment on first use and installs
+`requirements-deploy.txt` there (Python 3.9+ with `venv` and access to PyPI required).
+It reuses the pinned Pillow installation on later runs without changing global Python packages.
+Run the icon preflight regression with `./scripts/bootstrap_deploy_python.sh` followed by
+`.venv-deploy/bin/python3 -m unittest discover -s scripts -p 'test_prepare_app_icons.py'`.
+
+Merges/pushes to `main` (also `testflight` and `release/**`) run CI first, then
+a serialized TestFlight deployment using the existing repository secrets. The
+deployment reads Apple's existing build numbers and selects the next integer
+above both those records and `project.yml`; no build-number commit or recursive
+workflow is needed. It signs automatically, uploads, and waits up to 30 minutes
+for Apple processing. A pending/failed result is visible in the job summary.
+Do not run `deploy.sh` concurrently with hosted deployment: choose one delivery
+route for a release. The local workflow remains available for manual releases;
+its post-upload bookkeeping commit uses `[skip ci]` to prevent a second upload.
