@@ -252,6 +252,12 @@ jobs:
         uses: apple-actions/upload-testflight-build@v5
         with:
           app-path: 'build/export/PortDeck.ipa'
+          # Match deploy.sh's upload protocol. Our next step owns processing checks;
+          # do not ask the action to manage optional TestFlight app metadata.
+          backend: altool
+          wait-for-processing: 'false'
+          upload-attempts: '1'
+          upload-timeout-minutes: '20'
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
