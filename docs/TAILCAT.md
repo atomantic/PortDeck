@@ -119,9 +119,13 @@ xcodegen generate
 The script caches the framework against bridge sources, lockfiles, build flags,
 Go, and Xcode. CI builds it before generating the project. Local deployment and
 screenshot scripts use the same build step. `project.yml` remains authoritative.
-The project declares its bundled encryption; App Store distribution needs the
-appropriate encryption/export-compliance answers rather than the previous
-system-crypto-only assumption.
+The operator approved Apple’s questionnaire answers for the bundled standard
+encryption: standard algorithms outside Apple’s OS, no proprietary/nonstandard
+algorithms, and no France distribution. Apple reports that this path requires no
+document upload. `ITSAppUsesNonExemptEncryption = NO` records exemption from
+Apple’s documentation requirement; it does not claim the app lacks encryption
+or settle separate export-law or annual reporting obligations. Reassess these
+answers before changing cryptography or enabling France distribution.
 
 ```bash
 cd Native/TailcatBridge

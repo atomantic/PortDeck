@@ -34,9 +34,10 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # PortDeck is the technical product name; the companion app is presented as PortOS.
         INFOPLIST_KEY_CFBundleDisplayName: "PortOS"
-        # WireGuard is bundled by the native bridge; review export compliance
-        # for this new cryptographic functionality before an App Store upload.
-        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: YES
+        # Operator-approved Apple questionnaire: standard bundled encryption,
+        # no proprietary algorithms, and France excluded. NO denotes exemption
+        # from Apple documentation, not absence of encryption or all legal duties.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         DEVELOPMENT_ASSET_PATHS: "\"PortDeck/Preview Content\""

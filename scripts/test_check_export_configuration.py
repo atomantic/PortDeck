@@ -20,7 +20,7 @@ class ExportConfigurationTests(unittest.TestCase):
             fixture.write_text(json.dumps(spec))
             return subprocess.run([sys.executable, str(SCRIPT), str(fixture), "--root", str(root)], capture_output=True, text=True)
 
-    def test_current_non_exempt_declaration_requires_code(self):
+    def test_non_exempt_declaration_requires_code(self):
         result = self.run_check({"base": {"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption": True}})
         self.assertEqual(result.returncode, 1)
         self.assertIn("issue #33", result.stderr)
