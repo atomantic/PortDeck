@@ -143,3 +143,8 @@ for Apple processing. A pending/failed result is visible in the job summary.
 Do not run `deploy.sh` concurrently with hosted deployment: choose one delivery
 route for a release. The local workflow remains available for manual releases;
 its post-upload bookkeeping commit uses `[skip ci]` to prevent a second upload.
+
+Hosted upload explicitly uses the same `altool` protocol as `deploy.sh`. The action
+uploads once; the following read-only step checks Apple processing. This avoids
+the action's optional Test Information/metadata-management preflight and does not
+change beta descriptions, feedback contacts, encryption answers, or tester groups.
