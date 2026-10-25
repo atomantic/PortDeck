@@ -158,6 +158,16 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Check release export configuration before signing
+        run: |
+          set -euo pipefail
+          brew install xcodegen
+          xcodegen dump --type json --file "$RUNNER_TEMP/portdeck-spec.json"
+          if ! python3 scripts/check_export_configuration.py "$RUNNER_TEMP/portdeck-spec.json"; then
+            echo "### Deployment blocked: export configuration requires operator action (issue #33)" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
       - name: Create temporary ASC key file
         env:
           APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
@@ -189,7 +199,6 @@ jobs:
       - name: Build native Tailcat transport and generate project
         run: |
           set -euo pipefail
-          brew install xcodegen
           ./scripts/build_tailcat_bridge.sh
           xcodegen generate
 

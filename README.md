@@ -143,7 +143,7 @@ Run the icon preflight regression with `./scripts/bootstrap_deploy_python.sh` fo
 `.venv-deploy/bin/python3 -m unittest discover -s scripts -p 'test_prepare_app_icons.py'`.
 
 Merges/pushes to `main` (also `testflight` and `release/**`) run CI first, then
-a serialized TestFlight deployment using the existing repository secrets. The
+a serialized TestFlight deployment using the existing repository secrets. Before creating signing material or building the native transport, deployment checks the explicit release export metadata. A non-exempt declaration without a resolved Apple-issued code fails visibly with operator action in issue #33; this presence check does not determine legal classification or Apple approval. The
 deployment reads Apple's existing build numbers and selects the next integer
 above both those records and `project.yml`; no build-number commit or recursive
 workflow is needed. It signs automatically, uploads, and waits up to 30 minutes
