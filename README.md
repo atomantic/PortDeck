@@ -6,11 +6,12 @@
 
 PortDeck is the native iOS companion for [PortOS](https://github.com/atomantic/PortOS). The Xcode product and bundle identity remain `PortDeck`; the installed app is displayed as **PortOS**.
 
-The app is now fleet-first. It connects directly to one or more PortOS instances over a Tailscale network, keeps each optional PortOS password in the iOS Keychain, and uses the live PortOS API instead of duplicating server capabilities in the app. Fleet profiles and passwords stay on the device by default; the user can opt into iCloud Keychain sync from Settings.
+The app is now fleet-first. It connects directly to one or more PortOS instances over a private network, keeps PortOS passwords in the iOS Keychain, and uses the live PortOS API. Existing Tailscale connections remain supported. An optional [Tailcat prototype](docs/TAILCAT.md) adds encrypted, app-scoped fleet connections without a Tailscale account or hosted coordination server. Direct fleet profiles/passwords can opt into iCloud Keychain sync; Tailcat pairings and passwords remain device-only.
 
 ## What works now
 
 - Add HTTP or HTTPS PortOS endpoints by MagicDNS name or Tailscale IP on port 5555
+- Optionally pair a full Tailcat address to the isolated PortOS ingress on port 5565, including HTTPS; the Tailcat viewer requires an explicit server capability
 - Discover identity and auth posture through public `GET /api/system/health`
 - Keep multiple instance profiles in SwiftData and choose the active capture/action target
 - Store each PortOS password separately in Keychain and authenticate with password-only HTTP Basic
@@ -24,7 +25,7 @@ The app is now fleet-first. It connects directly to one or more PortOS instances
 - Open read-only actions (recent Brain entries, goals, PM2 status, calendar, …) as live pages that fetch on open, render the returned records, and widen the window by parameter or by scrolling
 - Handle older PortOS health payloads that predate `name` and `authRequired`
 
-The previous Recall session-recording, audio-retention, analysis, and memory-extraction product has been removed. The new privacy boundary still permits a future explicit capture mode that uploads audio directly to the selected user-owned PortOS instance for processing; PortDeck does not require or operate a relay service.
+The previous Recall session-recording, audio-retention, analysis, and memory-extraction product has been removed. The new privacy boundary still permits a future explicit capture mode that uploads audio directly to the selected user-owned PortOS instance for processing; PortDeck does not require a PortDeck-operated relay service.
 
 ## Test against a native PortOS instance
 
@@ -40,9 +41,10 @@ The previous Recall session-recording, audio-retention, analysis, and memory-ext
 
    The response should include `instanceId`, `name`, `authRequired`, `scheme`, and `version`. PortDeck also supports the older response while a server is awaiting restart.
 
-4. Generate the project and run it from Xcode:
+4. Build the native dependency (Go 1.27.3+), generate the project, and run it from Xcode:
 
    ```bash
+   ./scripts/build_tailcat_bridge.sh
    xcodegen generate
    open PortDeck.xcodeproj
    ```
@@ -70,6 +72,7 @@ For HTTP tailnet endpoints, PortDeck deliberately permits dynamic cleartext host
 `project.yml` is the source of truth for the generated project.
 
 ```bash
+./scripts/build_tailcat_bridge.sh
 xcodegen generate
 
 xcodebuild build \
@@ -86,7 +89,7 @@ xcodebuild test \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-See [docs/PORTDECK_DESIGN.md](docs/PORTDECK_DESIGN.md) for the product structure and client architecture.
+See [docs/PORTDECK_DESIGN.md](docs/PORTDECK_DESIGN.md) for the product structure and client architecture, and [docs/TAILCAT.md](docs/TAILCAT.md) for private pairing, security boundaries, server prerequisites, and native transport tests.
 
 ## Demo data and App Store screenshots
 

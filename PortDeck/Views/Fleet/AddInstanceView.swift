@@ -17,6 +17,7 @@ struct AddInstanceView: View {
     @State private var discoveredURL: URL?
     @State private var isWorking = false
     @State private var errorMessage: String?
+    @State private var showingTailcat = false
     @FocusState private var focusedField: Field?
 
     private enum Field { case host, label, password }
@@ -25,6 +26,15 @@ struct AddInstanceView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    if !appState.isOfflineDemo {
+                        Button { showingTailcat = true } label: {
+                            Label("Connect privately with Tailcat", systemImage: "network.badge.shield.half.filled")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(isWorking)
+                        .accessibilityIdentifier("add-tailcat-instance")
+                    }
                     PortPanel {
                         VStack(alignment: .leading, spacing: 14) {
                             Label("Tailnet endpoint", systemImage: "network")
@@ -114,6 +124,9 @@ struct AddInstanceView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .interactiveDismissDisabled(isWorking)
+            .sheet(isPresented: $showingTailcat) {
+                AddTailcatInstanceView { dismiss() }
+            }
             .onAppear { focusedField = .host }
             .onChange(of: scheme) { health = nil; discoveredURL = nil }
             .onChange(of: host) { health = nil; discoveredURL = nil }

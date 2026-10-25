@@ -20,6 +20,31 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Explore Demo"].exists)
     }
 
+    func testTailcatSetupRejectsAnInvalidSecretLocally() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UseInMemoryStore"]
+        app.launch()
+        app.buttons["Add an instance"].tap()
+        app.buttons["add-tailcat-instance"].tap()
+        XCTAssertTrue(app.navigationBars["Tailcat Instance"].waitForExistence(timeout: 3))
+        let address = app.secureTextFields["tailcat-address"]
+        address.tap()
+        address.typeText("tcINVALID-test-only")
+        let password = app.secureTextFields["PortOS instance password"]
+        password.tap()
+        password.typeText("test-only-password\n")
+        let verify = app.buttons["Verify private connection"]
+        if !verify.isHittable { app.swipeUp() }
+        verify.tap()
+        let error = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Use the full, PSK-protected Tailcat address")).firstMatch
+        XCTAssertTrue(error.waitForExistence(timeout: 5))
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Tailcat private connection validation"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        XCTAssertFalse(app.buttons["Add to fleet"].exists)
+    }
+
     func testOfflineDemoCanBeEnteredAndExited() {
         let app = XCUIApplication()
         app.launchArguments = ["-UseInMemoryStore"]

@@ -5,6 +5,7 @@ import SwiftUI
 struct PortDeckApp: App {
     @UIApplicationDelegateAdaptor(PortDeckAppDelegate.self) private var appDelegate
     @State private var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
     private let modelContainer: ModelContainer
 
     @MainActor
@@ -56,6 +57,11 @@ struct PortDeckApp: App {
                 .environment(appState)
                 .onOpenURL { appState.handle(url: $0) }
                 .onAppear { appDelegate.connect(to: appState) }
+                .onChange(of: scenePhase) {
+                    if scenePhase == .background && !appState.isOfflineDemo {
+                        Task { await appState.tailcat.disconnectAll() }
+                    }
+                }
         }
         .modelContainer(modelContainer)
     }

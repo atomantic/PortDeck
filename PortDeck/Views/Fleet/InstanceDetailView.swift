@@ -75,7 +75,9 @@ struct InstanceDetailView: View {
         ) {
             Button("Remove from PortDeck", role: .destructive) { removeInstance() }
         } message: {
-            Text(appState.iCloudSyncEnabled
+            Text(instance.usesTailcat
+                ? "This removes this device's Tailcat pairing and password. It does not revoke access on PortOS. Revoke the device or replace the server capability there if this phone was lost."
+                : appState.iCloudSyncEnabled
                 ? "This removes the connection and password from your synced PortDeck fleet. It does not change the PortOS server."
                 : "This removes the local connection and its Keychain password. It does not change the PortOS server.")
         }
@@ -129,7 +131,7 @@ struct InstanceDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("Connection", systemImage: "network")
                     .font(.headline)
-                detailRow("Endpoint", instance.baseURLString, monospaced: true)
+                detailRow("Endpoint", instance.usesTailcat ? "Private Tailcat · port 5565" : instance.baseURLString, monospaced: true)
                 detailRow("Host", instance.hostname.isEmpty ? "Unknown" : instance.hostname)
                 detailRow("Version", instance.version.map { "v\($0)" } ?? "Unknown")
                 detailRow("Authentication", instance.authRequired ? "HTTP Basic · Keychain" : "Tailnet trust")
@@ -188,7 +190,7 @@ struct InstanceDetailView: View {
                     Label("Remote Desktop", systemImage: "rectangle.connected.to.line.below")
                         .font(.headline)
                     Spacer()
-                    if remoteDesktopStatus?.available == true {
+                    if remoteDesktopStatus?.canOpen(usingTailcat: instance.usesTailcat) == true {
                         Label("Ready", systemImage: "checkmark.circle.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(Color.portOnline)
@@ -200,7 +202,11 @@ struct InstanceDetailView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else if let status = remoteDesktopStatus {
-                    if status.available {
+                    if instance.usesTailcat && status.tailcatIngressSupported != true {
+                        Text("This PortOS version does not advertise remote desktop through Tailcat. Update PortOS to a version with Tailcat remote-desktop support, or use a direct connection for the viewer.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if status.available {
                         Text("View and control this machine through its PortOS connection. The separate VNC password is entered after the viewer opens.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -235,7 +241,7 @@ struct InstanceDetailView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(remoteDesktopStatus?.available != true || isStartingRemoteDesktop)
+                .disabled(remoteDesktopStatus?.canOpen(usingTailcat: instance.usesTailcat) != true || isStartingRemoteDesktop)
             }
         }
     }
@@ -319,16 +325,20 @@ struct InstanceDetailView: View {
 
     @MainActor
     private func startRemoteDesktop() async {
-        guard !isStartingRemoteDesktop, let baseURL = instance.baseURL else { return }
+        guard !isStartingRemoteDesktop, let baseURL = instance.baseURL,
+              remoteDesktopStatus?.canOpen(usingTailcat: instance.usesTailcat) == true else { return }
         isStartingRemoteDesktop = true
         remoteDesktopMessage = nil
         defer { isStartingRemoteDesktop = false }
         do {
             let password = try appState.credentials.password(for: instance.localID)
             let session = try await appState.api.createRemoteDesktopSession(baseURL: baseURL, password: password)
+            let viewerURL = try session.viewerURL(relativeTo: baseURL)
+            let route = instance.usesTailcat ? try await appState.tailcat.route(viewerURL) : nil
             remoteDesktopDestination = RemoteDesktopDestination(
                 instanceName: instance.displayName,
-                url: try session.viewerURL(relativeTo: baseURL)
+                url: route?.url ?? viewerURL,
+                tunnelToken: route?.token
             )
         } catch {
             remoteDesktopMessage = error.localizedDescription

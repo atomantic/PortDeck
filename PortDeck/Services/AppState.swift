@@ -40,6 +40,7 @@ final class AppState {
     let api: PortOSAPIClient
     let credentials: any CredentialStore
     let isOfflineDemo: Bool
+    let tailcat: TailcatTunnelPool
     private(set) var iCloudSyncEnabled: Bool
     private let fleetSyncCoordinator: FleetSyncCoordinator
     private let dailyLogReminders: any DailyLogReminderScheduling
@@ -54,17 +55,19 @@ final class AppState {
     nonisolated static let iCloudSyncKey = "iCloudFleetAndPasswordSyncEnabled"
 
     init(
-        api: PortOSAPIClient = PortOSAPIClient(),
-        credentials: any CredentialStore = KeychainCredentialStore(),
+        api: PortOSAPIClient? = nil,
+        credentials: (any CredentialStore)? = nil,
         fleetSyncStore: any FleetSyncStore = ICloudFleetSyncStore(),
         dailyLogReminders: (any DailyLogReminderScheduling)? = nil,
         defaults: UserDefaults = .standard,
         isOfflineDemo: Bool = false,
+        tailcat: TailcatTunnelPool = .shared,
         saveFleetRemoval: @escaping (ModelContext) throws -> Void = { try $0.save() }
     ) {
         self.saveFleetRemoval = saveFleetRemoval
-        self.api = api
-        self.credentials = credentials
+        self.tailcat = tailcat
+        self.api = api ?? PortOSAPIClient(transport: TailcatRoutingTransport(pool: tailcat))
+        self.credentials = credentials ?? TailcatAwareCredentialStore(tailcat: tailcat.store)
         self.defaults = defaults
         self.isOfflineDemo = isOfflineDemo
         self.dailyLogReminders = dailyLogReminders ?? DailyLogReminderScheduler()
@@ -73,7 +76,7 @@ final class AppState {
         dailyLogReminderMinutes = defaults.object(forKey: Self.dailyLogReminderMinutesKey) == nil
             ? Self.defaultDailyLogReminderMinutes
             : defaults.integer(forKey: Self.dailyLogReminderMinutesKey)
-        fleetSyncCoordinator = FleetSyncCoordinator(store: fleetSyncStore, credentials: credentials)
+        fleetSyncCoordinator = FleetSyncCoordinator(store: fleetSyncStore, credentials: self.credentials)
         if let value = defaults.string(forKey: Self.selectedInstanceKey) {
             selectedInstanceID = UUID(uuidString: value)
         }
@@ -159,7 +162,7 @@ final class AppState {
 
     func setICloudSyncEnabled(_ enabled: Bool, modelContext: ModelContext) throws -> FleetSyncSummary {
         let instances = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
-        try credentials.migratePasswords(for: instances.map(\.localID), toICloud: enabled)
+        try credentials.migratePasswords(for: instances.filter { !$0.usesTailcat }.map(\.localID), toICloud: enabled)
 
         let previous = iCloudSyncEnabled
         iCloudSyncEnabled = enabled
@@ -191,22 +194,40 @@ final class AppState {
 
     /// Sync-disabled removal is local-only; enabling sync later can import a remote copy.
     func removeFleetInstance(_ instance: PortOSInstance, modelContext: ModelContext) throws {
+        let removedID = instance.localID
+        let wasTailcat = instance.usesTailcat
         // Persist existing edits first so rollback below only undoes this deletion.
         try modelContext.save()
         let remaining = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
             .filter { $0.localID != instance.localID }
         try recordFleetDeletion(instance)
-        try credentials.removePassword(for: instance.localID)
-        modelContext.delete(instance)
+        let previousPairing = wasTailcat ? try tailcat.store.connection(for: removedID) : nil
+        var removedPairing = false
         do {
+            if wasTailcat {
+                // The password is inside this same device-only pairing item.
+                try tailcat.removeSavedConnection(for: removedID)
+                removedPairing = true
+            } else {
+                try credentials.removePassword(for: removedID)
+            }
+            modelContext.delete(instance)
             try saveFleetRemoval(modelContext)
         } catch {
-            // Published tombstones and removed passwords are idempotent on retry.
             modelContext.rollback()
+            if removedPairing, let previousPairing {
+                do { try tailcat.store.setConnection(previousPairing, for: removedID) }
+                catch {
+                    throw TailcatError.pairingRestoreFailed
+                }
+            }
             throw error
         }
         if !remaining.contains(where: { $0.localID == selectedInstanceID }) {
             selectedInstanceID = remaining.first?.localID
+        }
+        if wasTailcat {
+            Task { await tailcat.disconnect(removedID) }
         }
     }
 

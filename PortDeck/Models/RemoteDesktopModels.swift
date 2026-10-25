@@ -8,6 +8,11 @@ struct RemoteDesktopStatus: Decodable, Equatable, Sendable {
     let platform: String
     let port: Int
     let setupCommand: String
+    var tailcatIngressSupported: Bool? = nil
+
+    func canOpen(usingTailcat: Bool) -> Bool {
+        available && (!usingTailcat || tailcatIngressSupported == true)
+    }
 }
 struct RemoteDesktopSession: Decodable, Equatable, Sendable {
     let viewerPath: String
