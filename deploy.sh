@@ -114,7 +114,8 @@ cp project.yml "$ORIG_PROJECT_YML"
 cp "$PROJECT/project.pbxproj" "$ORIG_PBXPROJ"
 
 CURRENT_BUILD=$(grep -m1 'CURRENT_PROJECT_VERSION:' project.yml | awk '{print $2}')
-NEW_BUILD=$((CURRENT_BUILD + 1))
+# Hosted releases do not commit their build number; consult Apple before a local upload too.
+NEW_BUILD=$(APPSTORE_API_PRIVATE_KEY_PATH="$KEY_PATH" "$DEPLOY_PYTHON" scripts/testflight_build.py next "$CURRENT_BUILD")
 echo "📦 Build number: $CURRENT_BUILD → $NEW_BUILD"
 /usr/bin/sed -i '' "s/CURRENT_PROJECT_VERSION: ${CURRENT_BUILD}/CURRENT_PROJECT_VERSION: ${NEW_BUILD}/" project.yml
 

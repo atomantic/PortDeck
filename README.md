@@ -148,3 +148,7 @@ Hosted upload explicitly uses the same `altool` protocol as `deploy.sh`. The act
 uploads once; the following read-only step checks Apple processing. This avoids
 the action's optional Test Information/metadata-management preflight and does not
 change beta descriptions, feedback contacts, encryption answers, or tester groups.
+
+The manual workflow uses the same Apple-backed build-number allocator, so a local
+release after a hosted release cannot reuse the hosted build number even though
+`project.yml` retains its baseline until a successful local bookkeeping commit.
