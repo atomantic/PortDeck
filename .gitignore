@@ -52,3 +52,5 @@ Vendor/PortDeckTailcat.xcframework/
 
 # Isolated deployment Python dependencies
 .venv-deploy/
+.venv-deploy.lock
+.venv-deploy-backup.*/

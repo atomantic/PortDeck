@@ -1,2 +1,2 @@
-# Last Pillow series supporting the macOS system Python 3.9.
+# Deployment requires Python 3.11–3.15; CI pins Python 3.13.
 Pillow==13.0.0
