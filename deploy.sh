@@ -108,16 +108,16 @@ if $BUILD_WATCH; then MSG="$MSG watchOS"; fi
 echo "$MSG"
 
 # Auto-increment build # with rollback on failure.
+CURRENT_BUILD=$(grep -m1 'CURRENT_PROJECT_VERSION:' project.yml | awk '{print $2}')
+# Hosted releases do not commit their build number; consult Apple before a local upload too.
+NEW_BUILD=$(APPSTORE_API_PRIVATE_KEY_PATH="$KEY_PATH" "$DEPLOY_PYTHON" scripts/testflight_build.py next "$CURRENT_BUILD")
+echo "📦 Build number: $CURRENT_BUILD → $NEW_BUILD"
+
 ORIG_PROJECT_YML=$(mktemp)
 ORIG_PBXPROJ=$(mktemp)
 cp project.yml "$ORIG_PROJECT_YML"
 cp "$PROJECT/project.pbxproj" "$ORIG_PBXPROJ"
 
-CURRENT_BUILD=$(grep -m1 'CURRENT_PROJECT_VERSION:' project.yml | awk '{print $2}')
-# Hosted releases do not commit their build number; consult Apple before a local upload too.
-NEW_BUILD=$(APPSTORE_API_PRIVATE_KEY_PATH="$KEY_PATH" "$DEPLOY_PYTHON" scripts/testflight_build.py next "$CURRENT_BUILD")
-echo "📦 Build number: $CURRENT_BUILD → $NEW_BUILD"
-/usr/bin/sed -i '' "s/CURRENT_PROJECT_VERSION: ${CURRENT_BUILD}/CURRENT_PROJECT_VERSION: ${NEW_BUILD}/" project.yml
 
 DEPLOY_SUCCESS=false
 rollback_build_bump() {
@@ -129,6 +129,8 @@ rollback_build_bump() {
     rm -f "$ORIG_PROJECT_YML" "$ORIG_PBXPROJ"
 }
 trap rollback_build_bump EXIT
+
+/usr/bin/sed -i '' "s/CURRENT_PROJECT_VERSION: ${CURRENT_BUILD}/CURRENT_PROJECT_VERSION: ${NEW_BUILD}/" project.yml
 
 echo "⚙️  Regenerating Xcode project..."
 xcodegen generate
