@@ -31,6 +31,7 @@
 		3E56F67F31B240FCF4F596CC /* AddFederationPeerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EEE6276C0CE74A3AC23C8CD /* AddFederationPeerView.swift */; };
 		3F4D71AE753570E237D64F86 /* FleetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549A6DEBA55EB1AE159BCAFC /* FleetView.swift */; };
 		3FA67246D1E63F049C81040A /* ActionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBC34ADD9D0E7EC56691233 /* ActionDetailView.swift */; };
+		449C28E0BE65991762D4B6B1 /* FleetModelStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73751CAAA98EB04FCD634273 /* FleetModelStoreTests.swift */; };
 		4713606B18A8D70DA7B763ED /* PortOSAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533BA6A44D7B184344EE5515 /* PortOSAPIClientTests.swift */; };
 		4A663AD4CBD04396300218AA /* String+FieldName.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A1867EA214C668B238800A /* String+FieldName.swift */; };
 		4D599A7E94F2E99F7AAC8F2D /* AddInstanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9AE2BBFBE27494005E26A63 /* AddInstanceView.swift */; };
@@ -49,6 +50,7 @@
 		91E8DA096FD594AAF3A1F9F2 /* RemoteDesktopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34707BD66F8DF58AA9649363 /* RemoteDesktopTests.swift */; };
 		9916C9AE0FD8B2A2E7FAFC63 /* PortDeckTailcat.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3EF6FA27CE0EC9F38AF19B38 /* PortDeckTailcat.xcframework */; };
 		9934CC918B9C43A6F20BECDA /* PortDeckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFA00746B1E54D68DE886E0 /* PortDeckUITests.swift */; };
+		9AD4280E63D6DA23AFA2C6E3 /* FleetModelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026532BA9E0C4BE182D063DA /* FleetModelStore.swift */; };
 		9F407D30765E935C170DBB8C /* PortOSAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35688402A5D83A178118FE9E /* PortOSAPIClient.swift */; };
 		A778FB8C45EFF39FF2CB1174 /* TailcatConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6767A2C620477ED66C6778 /* TailcatConnectionStore.swift */; };
 		A7D04ACD6D4DD72891CB0909 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99D3575365329B47833DA9B /* AppShellView.swift */; };
@@ -98,6 +100,7 @@
 /* Begin PBXFileReference section */
 		01B002FBB64F5EC7DA4E9A5F /* ActionResultDisplayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionResultDisplayTests.swift; sourceTree = "<group>"; };
 		0251E993CB15E99626E4B325 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		026532BA9E0C4BE182D063DA /* FleetModelStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetModelStore.swift; sourceTree = "<group>"; };
 		030713827E7F8758FE90A8B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		03690F5A793D3A31C884C828 /* ActionArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionArgumentsTests.swift; sourceTree = "<group>"; };
 		11E2276460E8A3BD70AF6C41 /* DailyLogReminderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogReminderTests.swift; sourceTree = "<group>"; };
@@ -137,6 +140,7 @@
 		6914ECD585B8071A96C79116 /* PortOSEndpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSEndpointTests.swift; sourceTree = "<group>"; };
 		6A31BCAC6D377780A03C5578 /* RemoteDesktopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDesktopView.swift; sourceTree = "<group>"; };
 		6B351C0DF26B662D65EFFBB8 /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
+		73751CAAA98EB04FCD634273 /* FleetModelStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetModelStoreTests.swift; sourceTree = "<group>"; };
 		7E786AF3C07063373E5B5E13 /* ActionParameterForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionParameterForm.swift; sourceTree = "<group>"; };
 		8123E770CAF0DF061A1B4E3E /* PortDeckAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortDeckAppDelegate.swift; sourceTree = "<group>"; };
 		814A88F3536606FF6A81191C /* KeychainItemClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainItemClient.swift; sourceTree = "<group>"; };
@@ -273,6 +277,7 @@
 				257B4C2EDB0AE72621B30F07 /* CaptureComposerModelTests.swift */,
 				11E2276460E8A3BD70AF6C41 /* DailyLogReminderTests.swift */,
 				68F63D7F47072332EFA2378C /* DemoDataTests.swift */,
+				73751CAAA98EB04FCD634273 /* FleetModelStoreTests.swift */,
 				C85C3E0C018CA085C75D3AF1 /* FleetRemovalTests.swift */,
 				379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */,
 				26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */,
@@ -379,6 +384,7 @@
 				57D2CFE90554D9616B0796AB /* DailyLogReminderScheduler.swift */,
 				6B351C0DF26B662D65EFFBB8 /* DemoData.swift */,
 				34429E825AA3AE3B5901EC9B /* DictationController.swift */,
+				026532BA9E0C4BE182D063DA /* FleetModelStore.swift */,
 				1A983807C7A402535A0E1074 /* FleetRemovalFixture.swift */,
 				DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */,
 				BE28A9A2AD442F01E40A543C /* ICloudFleetSyncStore.swift */,
@@ -526,6 +532,7 @@
 				0BCB134D03DB14C14F995E67 /* CaptureComposerModelTests.swift in Sources */,
 				6FADA363733182D1264E3117 /* DailyLogReminderTests.swift in Sources */,
 				62BBCA1D8D851F296A86C0B5 /* DemoDataTests.swift in Sources */,
+				449C28E0BE65991762D4B6B1 /* FleetModelStoreTests.swift in Sources */,
 				F796A5D1995E2BBD4EBE2AA8 /* FleetRemovalTests.swift in Sources */,
 				13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */,
 				2452C87D2461089ABE6B329C /* ICloudFleetSyncStoreTests.swift in Sources */,
@@ -565,6 +572,7 @@
 				34791959EE25157E367AA2B7 /* DemoData.swift in Sources */,
 				E22BEA5680C61A40EC53F28C /* DictationController.swift in Sources */,
 				34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */,
+				9AD4280E63D6DA23AFA2C6E3 /* FleetModelStore.swift in Sources */,
 				2D705B67817E5D3C0A548BC5 /* FleetRemovalFixture.swift in Sources */,
 				90456A6F3931504957C2A1C5 /* FleetSyncCoordinator.swift in Sources */,
 				3F4D71AE753570E237D64F86 /* FleetView.swift in Sources */,
@@ -724,7 +732,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PortDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PortOS;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -844,7 +852,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PortDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PortOS;
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

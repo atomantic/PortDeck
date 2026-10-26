@@ -69,6 +69,7 @@ jobs:
           DESTINATION="platform=iOS Simulator,id=$SIMULATOR_ID"
 
           echo "Using destination: $DESTINATION"
+          mkdir -p build
 
           xcodebuild test \
             -project PortDeck.xcodeproj \
@@ -81,8 +82,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             -skipPackagePluginValidation \
-            -skipMacroValidation \
+            -skipMacroValidation 2>&1 \
+            | tee build/unit-tests.log \
             | xcbeautify
+
+          # Keep the host disk-backed and fail if first-launch directory recovery
+          # returns. Preserve the raw diagnostics rather than filtering them out.
+          if grep -F 'During recovery, parent directory path reported as missing' build/unit-tests.log; then
+            echo "Persistent-store parent directory was not initialized before opening the store." >&2
+            exit 1
+          fi
 
           # Native Security needs an application-identifier entitlement, absent
           # from unsigned simulator hosts. Ad hoc signing needs no account.
