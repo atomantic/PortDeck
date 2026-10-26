@@ -57,6 +57,11 @@ def verify_results(summary, report):
             for (bundle, name), n in cases.items()}
 
 
+def verify_test_diagnostics(log):
+    if "During recovery, parent directory path reported as missing" in log:
+        raise ValueError("Persistent-store parent directory was not initialized before opening the store.")
+
+
 def run_phase(name, command, timeout, metrics):
     """Kill the command group on timeout; preserve raw output and report a tail."""
     log = EVIDENCE / f"{name}.log"
@@ -107,9 +112,11 @@ def main():
         # Cold hosted runtimes migrate data while the signed products build.
         # The baseline spent ~612s in its first test operation; 180s was too short.
         run_phase("simulator-ready", ["xcrun", "simctl", "bootstatus", simulator, "-b"], 900, metrics)
-        run_phase("test-without-building", ["xcodebuild", "test-without-building", *common,
+        test_log = run_phase("test-without-building", ["xcodebuild", "test-without-building", *common,
                   "-parallel-testing-enabled", "NO", "-resultBundlePath", str(RESULT),
                   "-only-testing:PortDeckTests", *[f"-only-testing:PortDeckUITests/{name.removesuffix('()')}" for name in UI_TESTS]], 900, metrics)
+        # Preserve the disk-backed first-launch diagnostic gate added in #37.
+        verify_test_diagnostics(test_log)
         summary = json.loads(run_phase("test-summary", ["xcrun", "xcresulttool", "get", "test-results", "summary", "--path", str(RESULT)], 60, metrics))
         report = json.loads(run_phase("test-tree", ["xcrun", "xcresulttool", "get", "test-results", "tests", "--path", str(RESULT)], 60, metrics))
         metrics["tests"] = verify_results(summary, report)

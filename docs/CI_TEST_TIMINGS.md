@@ -9,7 +9,9 @@ avoids extra simulator clones for these short suites.
 
 The result gate checks every test result against the summary, rejects skips and
 failures, and requires explicit `Passed` results for both native keychain tests
-and all four UI contracts. Running unsigned locally remains possible, but does
+and all four UI contracts. It also preserves #37's failure gate for the raw
+`During recovery, parent directory path reported as missing` diagnostic; the
+host remains disk-backed. Running unsigned locally remains possible, but does
 not satisfy CI's native-keychain evidence requirement.
 
 ## Baseline

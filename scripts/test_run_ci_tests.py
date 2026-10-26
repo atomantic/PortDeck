@@ -57,6 +57,11 @@ class CoverageGateTests(unittest.TestCase):
 
 
 class PhaseTests(unittest.TestCase):
+    def test_rejects_persistent_store_recovery_even_if_tests_pass(self):
+        ci.verify_test_diagnostics("All tests passed")
+        with self.assertRaisesRegex(ValueError, "Persistent-store parent directory"):
+            ci.verify_test_diagnostics("CoreData: During recovery, parent directory path reported as missing\nAll tests passed")
+
     def test_failed_command_retains_status_and_log(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(ci, "EVIDENCE", Path(directory)):
             metrics = {}
