@@ -95,7 +95,6 @@ def main():
         metrics["simulator"] = {"name": device["name"], "runtime": next(r for r, devices in inventory.items() if device in devices)}
         if device["state"] != "Booted":
             run_phase("simulator-boot", ["xcrun", "simctl", "boot", simulator], 30, metrics)
-        run_phase("simulator-ready", ["xcrun", "simctl", "bootstatus", simulator, "-b"], 180, metrics)
         common = ["-project", "PortDeck.xcodeproj", "-scheme", "PortDeck",
                   "-destination", f"platform=iOS Simulator,id={simulator}", "-destination-timeout", "60",
                   "-configuration", "Debug", "-derivedDataPath", "build",
@@ -105,6 +104,9 @@ def main():
         # Xcode task durations are cumulative work, not a separate wall-clock phase.
         sign_times = re.findall(r"([\d.]+) seconds\s+CodeSign\b", build_log)
         metrics["codesign_task_seconds"] = sum(map(float, sign_times)) if sign_times else None
+        # Cold hosted runtimes migrate data while the signed products build.
+        # The baseline spent ~612s in its first test operation; 180s was too short.
+        run_phase("simulator-ready", ["xcrun", "simctl", "bootstatus", simulator, "-b"], 900, metrics)
         run_phase("test-without-building", ["xcodebuild", "test-without-building", *common,
                   "-parallel-testing-enabled", "NO", "-resultBundlePath", str(RESULT),
                   "-only-testing:PortDeckTests", *[f"-only-testing:PortDeckUITests/{name.removesuffix('()')}" for name in UI_TESTS]], 900, metrics)

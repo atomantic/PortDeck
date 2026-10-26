@@ -36,7 +36,9 @@ this does not identify compilation as its cause.
 
 `python3 scripts/run_ci_tests.py` records:
 
-- Simulator boot request and readiness wall time independently of building.
+- Simulator boot request and readiness wait independently of building. Boot
+  starts before the build so cold-runtime migration can overlap compilation;
+  readiness wait is the remaining wait after building, not total boot latency.
 - Signed build-for-testing wall time, with `-showBuildTimingSummary` in the raw
   log. CodeSign cumulative task time is reported separately; it is included in
   build wall time, not an additional serial phase.
@@ -49,11 +51,19 @@ this does not identify compilation as its cause.
 The job summary reports phase durations, and the `ci-test-evidence` artifact
 retains raw logs, JSON metrics, test summary/tree and the xcresult bundle for
 seven days, including on failure. Each phase has a deadline (boot readiness
-180 s, build 1,200 s, tests 900 s, result queries 60 s). A timeout kills the
+900 s, build 1,200 s, tests 900 s, result queries 60 s). A timeout kills the
 command group, records the failed phase and prints at most the last 80 log lines.
-The job has a 45-minute outer limit. Failures remain failures.
+The job has a 60-minute outer limit. Failures remain failures.
 
 Compare the PR run's `timings.json` with the hosted baseline above, checking the
 runner image/Xcode/runtime before interpreting differences. Local hardware
 measurements are validation only and cannot establish hosted speedup. The
 hosted after measurements are recorded once CI completes.
+
+The [first instrumented hosted run](https://github.com/atomantic/PortDeck/actions/runs/40270181124)
+failed before building or testing: the initial 180-second readiness limit expired
+while `com.apple.locationd.migrator` was still migrating the cold simulator. This
+is direct startup evidence, not a test flake. The readiness bound is now 900 s,
+allowing for the baseline's 611.959-second first test operation; build and test
+deadlines and test assertions are unchanged. Failed runs are excluded from the
+speed comparison.
