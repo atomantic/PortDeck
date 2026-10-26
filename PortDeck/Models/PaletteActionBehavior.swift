@@ -36,7 +36,19 @@ extension PaletteAction {
 
     /// Server timers currently notify the web client only. Keep them unavailable until
     /// PortDeck can deliver expiry notifications, including while backgrounded.
-    var isAvailableNatively: Bool { id != "timer_set" }
+    /// Image generation also needs a durable completion lookup before it can be offered.
+    var isAvailableNatively: Bool { id != "timer_set" && id != "image_generate" }
+
+    static func visibleActions(_ actions: [PaletteAction], matching searchText: String) -> [PaletteAction] {
+        let available = actions.filter(\.isAvailableNatively)
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return available }
+        return available.filter {
+            $0.label.localizedCaseInsensitiveContains(query) ||
+            $0.section.localizedCaseInsensitiveContains(query) ||
+            $0.description.localizedCaseInsensitiveContains(query)
+        }
+    }
 
     /// PortOS list tools all name their page size `limit`; nothing else is assumed to be one.
     private static let pageSizeParameterName = "limit"

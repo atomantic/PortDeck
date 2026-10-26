@@ -14,6 +14,20 @@ final class PaletteActionBehaviorTests: XCTestCase {
         XCTAssertFalse(actions[0].isReader)
     }
 
+    func testImageGenerationIsUnavailableBeforeSearchIndependentOfReaderInference() throws {
+        let image = try PaletteActionFixture.make(id: "image_generate", label: "Generate Image", section: "Media")
+        let ordinary = try PaletteActionFixture.make(id: "image_list", label: "List Images", section: "Media")
+        let writer = try PaletteActionFixture.make(id: "daily_log_append")
+        let manifest = PaletteManifest(actions: [image, ordinary, writer])
+
+        XCTAssertFalse(image.isAvailableNatively)
+        XCTAssertTrue(ordinary.isAvailableNatively)
+        XCTAssertTrue(writer.isAvailableNatively)
+        XCTAssertEqual(PaletteAction.visibleActions(manifest.actions, matching: "").map(\.id), ["image_list", "daily_log_append"])
+        XCTAssertEqual(PaletteAction.visibleActions(manifest.actions, matching: "image").map(\.id), ["image_list"])
+        XCTAssertTrue(PaletteAction.visibleActions(manifest.actions, matching: "Generate Image").isEmpty)
+    }
+
     func testReadVerbWithoutRequiredParametersIsAReader() throws {
         let action = try PaletteActionFixture.make(
             id: "brain_list_recent",
