@@ -185,6 +185,72 @@ final class TailcatTransportTests: XCTestCase {
     }
 
     @MainActor
+    func testPairingRemovalFailurePreservesRowSelectionAndTunnelWithoutRestoration() async throws {
+        let fixture = try TailcatRemovalFixture()
+        _ = try await fixture.pool.route(XCTUnwrap(fixture.instance.baseURL))
+        fixture.keychain.failures = [.init(operation: .delete, status: errSecInteractionNotAllowed)]
+        let previousWrites = fixture.keychain.calls.filter { $0.operation == .update || $0.operation == .add }.count
+
+        XCTAssertThrowsError(try fixture.remove()) { error in
+            guard case CredentialStoreError.keychain(errSecInteractionNotAllowed) = error else {
+                return XCTFail("Expected the original pairing-removal error, got \(error)")
+            }
+        }
+        XCTAssertEqual(try fixture.context.fetchCount(FetchDescriptor<PortOSInstance>()), 1)
+        XCTAssertEqual(fixture.state.selectedInstanceID, fixture.instance.localID)
+        XCTAssertEqual(try fixture.store.connection(for: fixture.instance.localID), fixture.connection)
+        XCTAssertEqual(fixture.saveCount, 0)
+        XCTAssertEqual(fixture.keychain.calls.filter { $0.operation == .update || $0.operation == .add }.count, previousWrites)
+        await Task.yield()
+        XCTAssertEqual(fixture.tunnel.closeCount, 0)
+
+        try fixture.remove()
+        await fulfillment(of: [fixture.disconnected], timeout: 2)
+        XCTAssertEqual(fixture.saveCount, 1)
+        XCTAssertEqual(fixture.tunnel.closeCount, 1)
+        XCTAssertTrue(try fixture.context.fetch(FetchDescriptor<PortOSInstance>()).isEmpty)
+        XCTAssertNil(fixture.state.selectedInstanceID)
+        XCTAssertEqual(fixture.cloud.accessCount, 0)
+    }
+
+    @MainActor
+    func testPairingRestorationFailureTakesPrecedenceAndRetainsRowSelectionAndTunnel() async throws {
+        let fixture = try TailcatRemovalFixture()
+        _ = try await fixture.pool.route(XCTUnwrap(fixture.instance.baseURL))
+        fixture.failSave = true
+        fixture.instance.localLabel = "Pending edit"
+        fixture.keychain.failures = [.init(operation: .add, status: errSecInteractionNotAllowed)]
+
+        XCTAssertThrowsError(try fixture.remove()) { error in
+            guard case TailcatError.pairingRestoreFailed = error else {
+                return XCTFail("Expected restoration error to replace save error, got \(error)")
+            }
+        }
+        XCTAssertEqual(try fixture.context.fetchCount(FetchDescriptor<PortOSInstance>()), 1)
+        XCTAssertEqual(fixture.instance.localLabel, "Pending edit")
+        XCTAssertEqual(fixture.state.selectedInstanceID, fixture.instance.localID)
+        XCTAssertNil(try fixture.store.connection(for: fixture.instance.localID))
+        XCTAssertEqual(fixture.saveCount, 1)
+        await Task.yield()
+        XCTAssertEqual(fixture.tunnel.closeCount, 0)
+        XCTAssertEqual(fixture.cloud.accessCount, 0)
+        await fixture.pool.disconnectAll()
+    }
+
+    @MainActor
+    func testPairingSnapshotFailureDoesNotRemovePairingOrSaveDeletion() throws {
+        let fixture = try TailcatRemovalFixture()
+        fixture.keychain.failures = [.init(operation: .read, status: errSecInteractionNotAllowed)]
+        XCTAssertThrowsError(try fixture.remove())
+        XCTAssertEqual(try fixture.context.fetchCount(FetchDescriptor<PortOSInstance>()), 1)
+        XCTAssertEqual(fixture.state.selectedInstanceID, fixture.instance.localID)
+        XCTAssertEqual(try fixture.store.connection(for: fixture.instance.localID), fixture.connection)
+        XCTAssertFalse(fixture.keychain.calls.contains { $0.operation == .delete })
+        XCTAssertEqual(fixture.saveCount, 0)
+        XCTAssertEqual(fixture.cloud.accessCount, 0)
+    }
+
+    @MainActor
     func testFleetSyncCannotExportOrOverwriteDeviceOwnedProfiles() throws {
         let container = try ModelContainer(for: PortOSInstance.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = container.mainContext
@@ -226,8 +292,12 @@ private final class TailcatTestTunnel: TailcatLocalTunnel, @unchecked Sendable {
     let token = "unit-local-token"
     private let lock = NSLock()
     private var closes = 0
+    var onClose: (@Sendable () -> Void)?
     var closeCount: Int { lock.withLock { closes } }
-    func close() { lock.withLock { closes += 1 } }
+    func close() {
+        lock.withLock { closes += 1 }
+        onClose?()
+    }
 }
 
 private final class TailcatTestHTTPTransport: HTTPTransport, @unchecked Sendable {
@@ -251,7 +321,53 @@ private final class TailcatTestCredentialStore: CredentialStore, @unchecked Send
 
 private final class TailcatTestFleetStore: FleetSyncStore, @unchecked Sendable {
     var profiles: [SyncedInstanceProfile]
+    var accessCount = 0
     init(profiles: [SyncedInstanceProfile]) { self.profiles = profiles }
-    func loadProfiles() throws -> [SyncedInstanceProfile] { profiles }
-    func saveProfiles(_ profiles: [SyncedInstanceProfile]) throws { self.profiles = profiles }
+    func loadProfiles() throws -> [SyncedInstanceProfile] { accessCount += 1; return profiles }
+    func saveProfiles(_ profiles: [SyncedInstanceProfile]) throws { accessCount += 1; self.profiles = profiles }
+}
+
+@MainActor
+private final class TailcatRemovalFixture {
+    let keychain = InMemoryKeychainItemClient()
+    let store: KeychainTailcatConnectionStore
+    let tunnel = TailcatTestTunnel()
+    let pool: TailcatTunnelPool
+    let context: ModelContext
+    let instance: PortOSInstance
+    let connection = TailcatConnection(address: "tcUNIT-placeholder", origin: "http://127.0.0.1:5565", password: "unit-password")
+    let cloud = TailcatTestFleetStore(profiles: [])
+    let disconnected = XCTestExpectation(description: "Tunnel disconnects after persisted deletion")
+    let suite = "TailcatRemovalFixture.\(UUID().uuidString)"
+    let defaults: UserDefaults
+    var failSave = false
+    var saveCount = 0
+    lazy var state = AppState(fleetSyncStore: cloud, defaults: defaults, tailcat: pool, saveFleetRemoval: { [unowned self] context in
+        saveCount += 1
+        XCTAssertEqual(tunnel.closeCount, 0, "Persistence must precede disconnection")
+        if failSave { throw CocoaError(.fileWriteUnknown) }
+        try context.save()
+    })
+
+    init() throws {
+        store = KeychainTailcatConnectionStore(keychain: keychain, makeIdentity: { "unit-private-key" })
+        pool = TailcatTunnelPool(store: store, factory: TailcatTestFactory(tunnel: tunnel))
+        let container = try ModelContainer(for: PortOSInstance.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        context = ModelContext(container)
+        context.autosaveEnabled = false
+        let id = UUID()
+        instance = PortOSInstance(localID: id, baseURL: TailcatEndpoint.make(profileID: id), health:
+            PortOSHealth(status: "ok", version: "1", hostname: "Unit", instanceID: "private-instance", name: "Unit", authRequired: true, scheme: "http"))
+        defaults = UserDefaults(suiteName: suite)!
+        defaults.set(true, forKey: AppState.iCloudSyncKey)
+        context.insert(instance)
+        try context.save()
+        try store.setConnection(connection, for: id)
+        let disconnected = disconnected
+        tunnel.onClose = { disconnected.fulfill() }
+        state.select(instance)
+    }
+
+    deinit { defaults.removePersistentDomain(forName: suite) }
+    func remove() throws { try state.removeFleetInstance(instance, modelContext: context) }
 }

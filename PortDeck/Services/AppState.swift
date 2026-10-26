@@ -194,41 +194,26 @@ final class AppState {
 
     /// Sync-disabled removal is local-only; enabling sync later can import a remote copy.
     func removeFleetInstance(_ instance: PortOSInstance, modelContext: ModelContext) throws {
-        let removedID = instance.localID
-        let wasTailcat = instance.usesTailcat
         // Persist existing edits first so rollback below only undoes this deletion.
         try modelContext.save()
         let remaining = try modelContext.fetch(FetchDescriptor<PortOSInstance>())
             .filter { $0.localID != instance.localID }
         try recordFleetDeletion(instance)
-        let previousPairing = wasTailcat ? try tailcat.store.connection(for: removedID) : nil
-        var removedPairing = false
+        let secureRemoval = try FleetInstanceRemoval(instance: instance, credentials: credentials, tailcat: tailcat)
+        var compensation = FleetInstanceRemoval.Compensation.none
         do {
-            if wasTailcat {
-                // The password is inside this same device-only pairing item.
-                try tailcat.removeSavedConnection(for: removedID)
-                removedPairing = true
-            } else {
-                try credentials.removePassword(for: removedID)
-            }
+            compensation = try secureRemoval.removeSecureState()
             modelContext.delete(instance)
             try saveFleetRemoval(modelContext)
         } catch {
             modelContext.rollback()
-            if removedPairing, let previousPairing {
-                do { try tailcat.store.setConnection(previousPairing, for: removedID) }
-                catch {
-                    throw TailcatError.pairingRestoreFailed
-                }
-            }
+            try compensation.restoreAfterPersistenceFailure()
             throw error
         }
         if !remaining.contains(where: { $0.localID == selectedInstanceID }) {
             selectedInstanceID = remaining.first?.localID
         }
-        if wasTailcat {
-            Task { await tailcat.disconnect(removedID) }
-        }
+        secureRemoval.disconnectAfterPersistence()
     }
 
     private func reconcileSelectedInstance(modelContext: ModelContext) throws {
