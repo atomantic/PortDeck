@@ -20,7 +20,7 @@ struct PortDeckApp: App {
             isStoredInMemoryOnly: isDemoMode || ProcessInfo.processInfo.arguments.contains("-UseInMemoryStore")
         )
         do {
-            let container = try ModelContainer(for: PortOSInstance.self, configurations: configuration)
+            let container = try FleetModelStore.makeContainer(configuration: configuration)
             if isDemoMode { try DemoData.seed(modelContext: container.mainContext) }
             modelContainer = container
 
