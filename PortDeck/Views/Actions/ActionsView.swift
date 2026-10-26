@@ -17,7 +17,8 @@ struct ActionsView: View {
     }
 
     private var visibleActions: [PaletteAction] {
-        guard let actions = manifest?.actions else { return [] }
+        guard let manifestActions = manifest?.actions else { return [] }
+        let actions = manifestActions.filter(\.isAvailableNatively)
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return actions }
         return actions.filter {

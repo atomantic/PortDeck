@@ -2,6 +2,18 @@ import XCTest
 @testable import PortDeck
 
 final class PaletteActionBehaviorTests: XCTestCase {
+    func testNativeAvailabilityExcludesOnlyUnsupportedTimerFromSyntheticManifest() throws {
+        let actions = try ["timer_set", "daily_log_read", "daily_log_append", "timer_status", "future_action"]
+            .map { try PaletteActionFixture.make(id: $0, properties: "{}") }
+        let available = actions.filter(\.isAvailableNatively)
+        XCTAssertEqual(available.map(\.id), ["daily_log_read", "daily_log_append", "timer_status", "future_action"])
+        XCTAssertTrue(available.filter { $0.id.localizedCaseInsensitiveContains("timer") }
+            .allSatisfy { $0.id != "timer_set" })
+        XCTAssertTrue(available[0].isReader)
+        XCTAssertFalse(available[1].isReader)
+        XCTAssertFalse(actions[0].isReader)
+    }
+
     func testReadVerbWithoutRequiredParametersIsAReader() throws {
         let action = try PaletteActionFixture.make(
             id: "brain_list_recent",

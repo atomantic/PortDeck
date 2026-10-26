@@ -34,6 +34,10 @@ extension PaletteAction {
         "upgrade", "upload", "wipe", "write"
     ]
 
+    /// Server timers currently notify the web client only. Keep them unavailable until
+    /// PortDeck can deliver expiry notifications, including while backgrounded.
+    var isAvailableNatively: Bool { id != "timer_set" }
+
     /// PortOS list tools all name their page size `limit`; nothing else is assumed to be one.
     private static let pageSizeParameterName = "limit"
 
