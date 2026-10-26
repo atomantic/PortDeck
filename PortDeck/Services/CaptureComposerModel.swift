@@ -74,41 +74,16 @@ final class CaptureComposerModel {
         }
         do {
             let password = try credentials.password(for: profileID)
-            let summary: String
-            switch destination {
-            case .brain:
-                let response = try await api.invokeAction(
-                    id: "brain_capture",
-                    arguments: ["text": .string(trimmed)],
-                    baseURL: baseURL,
-                    password: password
-                )
-                guard submitID == requestID,
-                      accept(response, fallback: "Could not capture to Brain.") else { return }
-                summary = response.result.summary ?? "Captured to Brain."
-            case .dailyLog:
-                if submittedDictation {
-                    let response = try await api.invokeAction(
-                        id: "daily_log_append",
-                        arguments: ["text": .string(trimmed), "date": .string(submittedDate)],
-                        baseURL: baseURL,
-                        password: password
-                    )
-                    guard submitID == requestID,
-                          accept(response, fallback: "Could not add to the daily log.") else { return }
-                    summary = response.result.summary ?? "Added to the daily log."
-                } else {
-                    let response = try await api.appendDailyLog(
-                        text: trimmed,
-                        date: submittedDate,
-                        source: "text",
-                        baseURL: baseURL,
-                        password: password
-                    )
-                    summary = "Added to the daily log for \(response.date)."
-                }
-            }
-            guard submitID == requestID else { return }
+            guard let summary = try await deliverCapture(
+                destination: destination,
+                dictated: submittedDictation,
+                text: trimmed,
+                date: submittedDate,
+                baseURL: baseURL,
+                password: password,
+                requestID: requestID,
+                api: api
+            ), submitID == requestID else { return }
             acceptedCapture = AcceptedCapture(
                 profileID: profileID,
                 profileName: profileName,
@@ -125,6 +100,51 @@ final class CaptureComposerModel {
         } catch {
             guard submitID == requestID else { return }
             message = (error.localizedDescription, .error)
+        }
+    }
+
+    private func deliverCapture(
+        destination: CaptureDestination,
+        dictated: Bool,
+        text: String,
+        date: String,
+        baseURL: URL,
+        password: String?,
+        requestID: UUID,
+        api: PortOSAPIClient
+    ) async throws -> String? {
+        switch destination {
+        case .brain:
+            let response = try await api.invokeAction(
+                id: "brain_capture",
+                arguments: ["text": .string(text)],
+                baseURL: baseURL,
+                password: password
+            )
+            guard submitID == requestID,
+                  accept(response, fallback: "Could not capture to Brain.") else { return nil }
+            return response.result.summary ?? "Captured to Brain."
+        case .dailyLog:
+            if dictated {
+                let response = try await api.invokeAction(
+                    id: "daily_log_append",
+                    arguments: ["text": .string(text), "date": .string(date)],
+                    baseURL: baseURL,
+                    password: password
+                )
+                guard submitID == requestID,
+                      accept(response, fallback: "Could not add to the daily log.") else { return nil }
+                return response.result.summary ?? "Added to the daily log."
+            } else {
+                let response = try await api.appendDailyLog(
+                    text: text,
+                    date: date,
+                    source: "text",
+                    baseURL: baseURL,
+                    password: password
+                )
+                return "Added to the daily log for \(response.date)."
+            }
         }
     }
 
