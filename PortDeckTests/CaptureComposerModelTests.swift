@@ -280,6 +280,42 @@ final class CaptureComposerModelTests: XCTestCase {
         XCTAssertTrue(model.usedDictation)
     }
 
+    func testChangedThenRestoredSelectionKeepsInFlightSlotAndOriginalReceiptAcrossAllRoutes() async {
+        for destination in CaptureDestination.allCases {
+            for dictated in [false, true] {
+                let model = draft()
+                model.usedDictation = dictated
+                let profile = instance
+                let transport = gatedTransport(destination: destination, dictated: dictated)
+                let api = PortOSAPIClient(transport: transport)
+                let submission = Task {
+                    await model.submit(to: profile, destination: destination, date: date,
+                                       api: api, credentials: CaptureCredentials())
+                }
+                await transport.waitUntilRequestStarts()
+                let original = model.selection
+                model.selection = .init(profileID: UUID(), destination: .dailyLog, date: date.addingTimeInterval(86_400))
+                model.selection = original
+                XCTAssertTrue(model.isSubmitting)
+                await model.submit(to: profile, destination: destination, date: date,
+                                   api: api, credentials: CaptureCredentials())
+                await transport.releaseRequest()
+                await submission.value
+
+                XCTAssertEqual(model.text, "  Remember this \n")
+                XCTAssertEqual(model.transcript, "Remember this")
+                XCTAssertEqual(model.usedDictation, dictated)
+                XCTAssertFalse(model.isSubmitting)
+                XCTAssertEqual(model.acceptedCapture?.profileID, profile.localID)
+                XCTAssertEqual(model.acceptedCapture?.destination, destination)
+                XCTAssertEqual(model.acceptedCapture?.date, "2026-10-24")
+                XCTAssertEqual(model.message?.1, .success)
+                let count = await transport.requestCount
+                XCTAssertEqual(count, 1)
+            }
+        }
+    }
+
     private func gatedTransport(destination: CaptureDestination = .brain, dictated: Bool = true) -> CaptureTransport {
         let body = destination == .dailyLog && !dictated
             ? #"{"date":"2026-10-24","entry":"Remember this"}"#
@@ -396,7 +432,7 @@ private actor CaptureTransport: HTTPTransport {
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         self.request = request
         requestCount += 1
-        if suspended {
+        if suspended && requestCount == 1 {
             await withCheckedContinuation { continuation in
                 release = continuation
                 startWaiters.forEach { $0.resume() }

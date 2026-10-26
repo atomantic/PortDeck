@@ -24,21 +24,20 @@ final class CaptureComposerModel {
     }
 
     var text = DemoMode.isEnabled ? DemoData.captureText : "" {
-        didSet { if text != oldValue { draftRevision &+= 1 } }
+        didSet { if text != oldValue { ownership.draftDidChange() } }
     }
     var transcript = "" {
-        didSet { if transcript != oldValue { draftRevision &+= 1 } }
+        didSet { if transcript != oldValue { ownership.draftDidChange() } }
     }
     var usedDictation = false {
-        didSet { if usedDictation != oldValue { draftRevision &+= 1 } }
+        didSet { if usedDictation != oldValue { ownership.draftDidChange() } }
     }
     var selection: Selection? {
-        didSet { if selection != oldValue { draftRevision &+= 1 } }
+        didSet { if selection != oldValue { ownership.draftDidChange() } }
     }
     private(set) var acceptedCapture: AcceptedCapture?
-    private var draftRevision: UInt64 = 0
-    private var submitID: UUID?
-    private(set) var isSubmitting = false
+    private var ownership = ComposerSubmissionOwnership()
+    var isSubmitting: Bool { ownership.isSubmitting }
     private(set) var message: (String, InlineMessage.Kind)?
 
     // Dictation flows into the composer only. Clearing a submitted transcript must
@@ -59,19 +58,14 @@ final class CaptureComposerModel {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         selection = Selection(profileID: instance.localID, destination: destination, date: date)
-        let requestID = UUID()
-        submitID = requestID
-        let revision = draftRevision
+        guard let submission = ownership.begin() else { return }
         let profileID = instance.localID
         let profileName = instance.displayName
         let submittedDate = Self.dateString(date)
         let submittedDictation = usedDictation
-        isSubmitting = true
         message = nil
         acceptedCapture = nil
-        defer {
-            if submitID == requestID { isSubmitting = false }
-        }
+        defer { ownership.finish(submission) }
         do {
             let password = try credentials.password(for: profileID)
             guard let summary = try await deliverCapture(
@@ -81,9 +75,9 @@ final class CaptureComposerModel {
                 date: submittedDate,
                 baseURL: baseURL,
                 password: password,
-                requestID: requestID,
+                submission: submission,
                 api: api
-            ), submitID == requestID else { return }
+            ), ownership.ownsRequest(submission) else { return }
             acceptedCapture = AcceptedCapture(
                 profileID: profileID,
                 profileName: profileName,
@@ -92,13 +86,13 @@ final class CaptureComposerModel {
                 summary: summary
             )
             message = (summary, .success)
-            if draftRevision == revision {
+            if ownership.ownsDraft(submission) {
                 text = ""
                 transcript = ""
                 usedDictation = false
             }
         } catch {
-            guard submitID == requestID else { return }
+            guard ownership.ownsRequest(submission) else { return }
             message = (error.localizedDescription, .error)
         }
     }
@@ -110,7 +104,7 @@ final class CaptureComposerModel {
         date: String,
         baseURL: URL,
         password: String?,
-        requestID: UUID,
+        submission: ComposerSubmissionOwnership.Submission,
         api: PortOSAPIClient
     ) async throws -> String? {
         switch destination {
@@ -121,7 +115,7 @@ final class CaptureComposerModel {
                 baseURL: baseURL,
                 password: password
             )
-            guard submitID == requestID,
+            guard ownership.ownsRequest(submission),
                   accept(response, fallback: "Could not capture to Brain.") else { return nil }
             return response.result.summary ?? "Captured to Brain."
         case .dailyLog:
@@ -132,7 +126,7 @@ final class CaptureComposerModel {
                     baseURL: baseURL,
                     password: password
                 )
-                guard submitID == requestID,
+                guard ownership.ownsRequest(submission),
                       accept(response, fallback: "Could not add to the daily log.") else { return nil }
                 return response.result.summary ?? "Added to the daily log."
             } else {

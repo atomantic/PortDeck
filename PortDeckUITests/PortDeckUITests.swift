@@ -105,6 +105,30 @@ final class PortDeckUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Add an instance first"].exists)
     }
 
+    func testAcceptedTaskClearsUntouchedDraftAndShowsOriginalProfile() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo-data"]
+        app.launch()
+        app.tabBars.buttons["Tasks"].tap()
+
+        let queue = app.buttons["Queue task"]
+        XCTAssertTrue(queue.waitForExistence(timeout: 5))
+        let ready = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "enabled == true"), object: queue
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+        if !queue.isHittable { app.swipeUp() }
+        queue.tap()
+
+        let receipt = app.staticTexts.containing(
+            NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@",
+                        "Queued task ", "on Atlas Studio")
+        ).firstMatch
+        XCTAssertTrue(receipt.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textViews["Task description"].value as? String, "")
+        XCTAssertFalse(queue.isEnabled)
+    }
+
     func testReaderActionRendersEntriesOnOpenAndPagesOnDemand() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo-data"]

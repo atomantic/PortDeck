@@ -4,9 +4,12 @@ import Observation
 @MainActor
 @Observable
 final class TaskComposerModel {
-    var description = DemoMode.isEnabled ? DemoData.taskDescription : ""
+    var description = DemoMode.isEnabled ? DemoData.taskDescription : "" {
+        didSet { if description != oldValue { ownership.draftDidChange() } }
+    }
     var selectedTargetID: String? {
         didSet {
+            if selectedTargetID != oldValue { ownership.draftDidChange() }
             if let selectedTargetID,
                let runner = assignableInstances.first(where: { $0.instanceID == selectedTargetID }) {
                 retainedTargetName = runner.name
@@ -17,7 +20,7 @@ final class TaskComposerModel {
     }
     private(set) var assignableInstances: [AssignableInstance] = []
     private(set) var isLoading = false
-    private(set) var isSubmitting = false
+    var isSubmitting: Bool { ownership.isSubmitting }
     private(set) var lookupError: String?
     private(set) var submissionError: String?
     private(set) var submissionProfileName: String?
@@ -25,9 +28,11 @@ final class TaskComposerModel {
     private(set) var createdTaskProfileName: String?
 
     private var loadedProfileID: UUID?
-    private var currentProfileID: UUID?
+    private var currentProfileID: UUID? {
+        didSet { if currentProfileID != oldValue { ownership.draftDidChange() } }
+    }
     private var lookupID = UUID()
-    private var submitID = UUID()
+    private var ownership = ComposerSubmissionOwnership()
     private var retainedTargetName: String?
 
     func canSubmit(to profileID: UUID?) -> Bool {
@@ -50,7 +55,6 @@ final class TaskComposerModel {
         let requestID = UUID()
         lookupID = requestID
         currentProfileID = instance.localID
-        isSubmitting = false
         loadedProfileID = nil
         assignableInstances = []
         lookupError = nil
@@ -105,17 +109,13 @@ final class TaskComposerModel {
             return
         }
 
-        let requestID = UUID()
-        submitID = requestID
+        guard let submission = ownership.begin() else { return }
         let targetInstanceID = selectedTargetID
-        isSubmitting = true
         submissionError = nil
         submissionProfileName = nil
         createdTask = nil
         createdTaskProfileName = nil
-        defer {
-            if submitID == requestID { isSubmitting = false }
-        }
+        defer { ownership.finish(submission) }
         do {
             let password = try credentials.password(for: profileID)
             let task = try await api.createTask(
@@ -124,14 +124,14 @@ final class TaskComposerModel {
                 baseURL: baseURL,
                 password: password
             )
-            guard submitID == requestID else { return }
+            guard ownership.ownsRequest(submission) else { return }
             createdTask = task
             createdTaskProfileName = profileName
-            if currentProfileID == profileID { description = "" }
+            if ownership.ownsDraft(submission) { description = "" }
         } catch is CancellationError {
             return
         } catch {
-            guard submitID == requestID else { return }
+            guard ownership.ownsRequest(submission) else { return }
             submissionError = error.localizedDescription
             submissionProfileName = profileName
         }
