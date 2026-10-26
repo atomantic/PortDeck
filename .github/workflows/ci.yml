@@ -18,6 +18,7 @@ jobs:
   ci:
     runs-on: macos-latest
     name: Build & Test
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -37,9 +38,8 @@ jobs:
           ./scripts/bootstrap_deploy_python.sh
           .venv-deploy/bin/python3 -m unittest discover -s scripts -p 'test_*.py'
 
-      - name: Install xcbeautify
-        run: |
-          brew install xcbeautify xcodegen
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
       - uses: actions/setup-go@v6
         with:
@@ -60,81 +60,17 @@ jobs:
           echo "=== Available Devices ==="
           xcrun simctl list devices available
 
-      - name: Run unit tests
-        shell: bash
-        run: |
-          set -euo pipefail
+      - name: Build signed simulator host and run unit/UI contracts
+        run: python3 scripts/run_ci_tests.py
 
-          SIMULATOR_ID="$(python3 scripts/select_ios_simulator.py)"
-          DESTINATION="platform=iOS Simulator,id=$SIMULATOR_ID"
-
-          echo "Using destination: $DESTINATION"
-          mkdir -p build
-
-          xcodebuild test \
-            -project PortDeck.xcodeproj \
-            -scheme PortDeck \
-            -only-testing:PortDeckTests \
-            -destination "$DESTINATION" \
-            -destination-timeout 60 \
-            -configuration Debug \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            -skipPackagePluginValidation \
-            -skipMacroValidation 2>&1 \
-            | tee build/unit-tests.log \
-            | xcbeautify
-
-          # Keep the host disk-backed and fail if first-launch directory recovery
-          # returns. Preserve the raw diagnostics rather than filtering them out.
-          if grep -F 'During recovery, parent directory path reported as missing' build/unit-tests.log; then
-            echo "Persistent-store parent directory was not initialized before opening the store." >&2
-            exit 1
-          fi
-
-          # Native Security needs an application-identifier entitlement, absent
-          # from unsigned simulator hosts. Ad hoc signing needs no account.
-          xcodebuild test \
-            -project PortDeck.xcodeproj \
-            -scheme PortDeck \
-            -only-testing:PortDeckTests/KeychainCredentialStoreTests/testNativeDeviceOnlyRoundTripUsesUniqueServiceAndCleansUpItsOwnItems \
-            -only-testing:PortDeckTests/TailcatTransportTests/testNativeTailcatKeychainRoundTrip \
-            -destination "$DESTINATION" \
-            -configuration Debug \
-            -derivedDataPath build \
-            -resultBundlePath build/native-keychain.xcresult \
-            CODE_SIGNING_ALLOWED=YES \
-            CODE_SIGN_IDENTITY=- \
-            CODE_SIGNING_REQUIRED=NO \
-            | xcbeautify
-
-          xcrun xcresulttool get test-results summary --path build/native-keychain.xcresult > build/native-keychain-summary.json
-          python3 - <<'PY'
-          import json
-          with open("build/native-keychain-summary.json") as result:
-              summary = json.load(result)
-          assert summary["passedTests"] == 2, summary
-          assert summary["skippedTests"] == 0, summary
-          assert summary["failedTests"] == 0, summary
-          PY
-
-          xcodebuild test \
-            -project PortDeck.xcodeproj \
-            -scheme PortDeck \
-            -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredAndExited \
-            -only-testing:PortDeckUITests/PortDeckUITests/testOfflineDemoCanBeEnteredFromSettingsWithoutLogin \
-            -only-testing:PortDeckUITests/PortDeckUITests/testDailyLogReminderSettingIsAvailable \
-            -only-testing:PortDeckUITests/PortDeckUITests/testTailcatSetupRejectsAnInvalidSecretLocally \
-            -destination "$DESTINATION" \
-            -destination-timeout 60 \
-            -configuration Debug \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            -skipPackagePluginValidation \
-            -skipMacroValidation \
-            | xcbeautify
+      - name: Preserve simulator timing and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-test-evidence
+          path: build/ci-evidence
+          if-no-files-found: warn
+          retention-days: 7
 
   cd:
     runs-on: macos-latest

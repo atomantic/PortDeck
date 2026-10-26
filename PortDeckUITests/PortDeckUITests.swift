@@ -68,8 +68,13 @@ final class PortDeckUITests: XCTestCase {
         app.tabBars.element(boundBy: 0).buttons["Settings"].tap()
 
         let exploreDemo = app.buttons["Explore offline demo"]
-        app.swipeUp()
+        // Settings has variable-height sections. A single flick need not reach
+        // the demo row; stop scrolling as soon as the actual button is tappable.
+        for _ in 0..<4 where !exploreDemo.isHittable {
+            app.swipeUp()
+        }
         XCTAssertTrue(exploreDemo.waitForExistence(timeout: 3))
+        XCTAssertTrue(exploreDemo.isHittable)
         exploreDemo.tap()
 
         XCTAssertTrue(app.staticTexts["Offline Demo"].waitForExistence(timeout: 3))
