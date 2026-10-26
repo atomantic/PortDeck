@@ -15,11 +15,72 @@ final class CaptureComposerModelTests: XCTestCase {
         }
     }
 
-    func testRejectionWithoutSummaryHasUsefulFallback() async {
-        let model = draft()
-        await submit(model, body: #"{"ok":true,"result":{"ok":false,"summary":"  "}}"#)
-        assertRetained(model)
-        XCTAssertEqual(model.message?.0, "Could not capture to Brain.")
+    func testRejectionWithoutUsefulSummaryHasFallbackForBothDestinations() async {
+        for destination in CaptureDestination.allCases {
+            for result in [#"{"ok":false}"#, #"{"ok":false,"summary":"  "}"#] {
+                let model = draft()
+                let transport = CaptureTransport(status: 200, body: "{\"ok\":true,\"result\":\(result)}")
+                await model.submit(to: instance, destination: destination, date: date,
+                                   api: PortOSAPIClient(transport: transport), credentials: CaptureCredentials())
+                assertRetained(model)
+                XCTAssertNil(model.acceptedCapture)
+                XCTAssertEqual(model.message?.0, destination == .brain
+                               ? "Could not capture to Brain." : "Could not add to the daily log.")
+            }
+        }
+    }
+
+    func testAcceptedPaletteResponsesWithoutSummaryUseDestinationFallback() async throws {
+        for destination in CaptureDestination.allCases {
+            for result in [#"{"ok":true}"#, "{}"] {
+                let model = draft()
+                let transport = CaptureTransport(status: 200, body: "{\"ok\":true,\"result\":\(result)}")
+                await model.submit(to: instance, destination: destination, date: date,
+                                   api: PortOSAPIClient(transport: transport), credentials: CaptureCredentials())
+                let summary = destination == .brain ? "Captured to Brain." : "Added to the daily log."
+                XCTAssertEqual(model.message?.0, summary)
+                XCTAssertEqual(model.message?.1, .success)
+                XCTAssertEqual(model.acceptedCapture?.summary, summary)
+                XCTAssertEqual(model.text, "")
+                XCTAssertEqual(model.transcript, "")
+                XCTAssertFalse(model.usedDictation)
+                XCTAssertFalse(model.isSubmitting)
+                try await assertRequest(transport, destination: destination)
+            }
+        }
+    }
+
+    func testEmptyDraftAndInvalidURLLeaveDraftAndExistingReceiptUnchanged() async {
+        for invalidURL in [false, true] {
+            let model = draft()
+            await submit(model, body: #"{"ok":true,"result":{"summary":"Already saved"}}"#)
+            let originalSelection = model.selection
+            let originalProfileID = model.acceptedCapture?.profileID
+            model.text = invalidURL ? "New draft" : " \n\t "
+            model.transcript = "New transcript"
+            model.usedDictation = true
+            let originalText = model.text
+            let profile = instance
+            if invalidURL {
+                profile.baseURLString = "http://["
+                XCTAssertNil(profile.baseURL)
+            }
+            let transport = CaptureTransport(status: 200, body: "{}")
+            await model.submit(to: profile, destination: .dailyLog, date: date.addingTimeInterval(86_400),
+                               api: PortOSAPIClient(transport: transport), credentials: CaptureCredentials(fails: true))
+
+            let requestCount = await transport.requestCount
+            XCTAssertEqual(requestCount, 0)
+            XCTAssertEqual(model.text, originalText)
+            XCTAssertEqual(model.transcript, "New transcript")
+            XCTAssertTrue(model.usedDictation)
+            XCTAssertEqual(model.selection, originalSelection)
+            XCTAssertEqual(model.acceptedCapture?.profileID, originalProfileID)
+            XCTAssertEqual(model.acceptedCapture?.summary, "Already saved")
+            XCTAssertEqual(model.message?.0, "Already saved")
+            XCTAssertEqual(model.message?.1, .success)
+            XCTAssertFalse(model.isSubmitting)
+        }
     }
 
     func testAcceptedAndLegacyPaletteResponsesClearDraftForBothDestinations() async throws {
