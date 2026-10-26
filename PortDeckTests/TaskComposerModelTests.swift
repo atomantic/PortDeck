@@ -118,6 +118,108 @@ final class TaskComposerModelTests: XCTestCase {
         XCTAssertEqual(posts.first?.host, "atlas.example")
     }
 
+    func testSuspendedSuccessClearsOnlyUntouchedTaskDraft() async {
+        for edit in 0..<3 {
+            let transport = RoutingTaskTransport(suspendPosts: true)
+            let api = PortOSAPIClient(transport: transport)
+            let model = TaskComposerModel()
+            let atlas = makeInstance(id: atlasID, host: "atlas.example", serverID: "atlas")
+            await model.load(for: atlas, api: api, credentials: TestCredentialStore())
+            model.description = "Original task"
+            let submission = Task {
+                await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+            }
+            await transport.waitUntilPostStarts()
+            XCTAssertTrue(model.isSubmitting)
+            XCTAssertFalse(model.canSubmit(to: atlas.localID))
+            if edit != 0 { model.description = "New unsent task" }
+            if edit == 2 { model.description = "Original task" }
+            await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+            await transport.releasePost()
+            await submission.value
+
+            XCTAssertEqual(model.description, edit == 0 ? "" : (edit == 1 ? "New unsent task" : "Original task"))
+            XCTAssertFalse(model.isSubmitting)
+            XCTAssertEqual(model.createdTask?.id, "created-1")
+            XCTAssertEqual(model.createdTaskProfileName, "atlas.example")
+            let posts = await transport.posts
+            XCTAssertEqual(posts.count, 1)
+            XCTAssertEqual(posts.first?.description, "Original task")
+        }
+    }
+
+    func testProfileAndRunnerChangesIncludingRestorationPreserveDraftAndOriginalReceipt() async {
+        for changeProfile in [false, true] {
+            for restore in [false, true] {
+                let transport = RoutingTaskTransport(suspendPosts: true)
+                let api = PortOSAPIClient(transport: transport)
+                let model = TaskComposerModel()
+                let atlas = makeInstance(id: atlasID, host: "atlas.example", serverID: "atlas")
+                let home = makeInstance(id: homeID, host: "home.example", serverID: "home")
+                await model.load(for: atlas, api: api, credentials: TestCredentialStore())
+                model.description = "Original task"
+                model.selectedTargetID = "shared-runner"
+                let submission = Task {
+                    await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+                }
+                await transport.waitUntilPostStarts()
+                if changeProfile {
+                    await model.load(for: home, api: api, credentials: TestCredentialStore())
+                    if restore { await model.load(for: atlas, api: api, credentials: TestCredentialStore()) }
+                } else {
+                    model.selectedTargetID = "self"
+                    if restore { model.selectedTargetID = "shared-runner" }
+                }
+                let current = changeProfile && !restore ? home : atlas
+                XCTAssertTrue(model.isSubmitting)
+                XCTAssertFalse(model.canSubmit(to: current.localID))
+                await model.submit(to: current, api: api, credentials: TestCredentialStore())
+                await transport.releasePost()
+                await submission.value
+
+                XCTAssertEqual(model.description, "Original task")
+                XCTAssertFalse(model.isSubmitting)
+                XCTAssertTrue(model.canSubmit(to: current.localID))
+                XCTAssertEqual(model.createdTask?.id, "created-1")
+                XCTAssertEqual(model.createdTaskProfileName, "atlas.example")
+                XCTAssertNil(model.submissionError)
+                let posts = await transport.posts
+                XCTAssertEqual(posts.count, 1)
+                XCTAssertEqual(posts.first?.host, "atlas.example")
+                XCTAssertEqual(posts.first?.target, "shared-runner")
+            }
+        }
+    }
+
+    func testSameProfileRunnerReloadDoesNotReleaseSubmissionOrChangeDraftOwnership() async {
+        for failLookup in [false, true] {
+            let transport = RoutingTaskTransport(
+                failingHost: failLookup ? "atlas.example" : nil, suspendPosts: true
+            )
+            let api = PortOSAPIClient(transport: transport)
+            let model = TaskComposerModel()
+            let atlas = makeInstance(id: atlasID, host: "atlas.example", serverID: "atlas")
+            await model.load(for: atlas, api: api, credentials: TestCredentialStore())
+            model.description = "Original task"
+            let submission = Task {
+                await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+            }
+            await transport.waitUntilPostStarts()
+            await model.load(for: atlas, api: api, credentials: TestCredentialStore())
+            XCTAssertTrue(model.isSubmitting)
+            XCTAssertFalse(model.canSubmit(to: atlas.localID))
+            await model.submit(to: atlas, api: api, credentials: TestCredentialStore())
+            await transport.releasePost()
+            await submission.value
+
+            XCTAssertEqual(model.description, "")
+            XCTAssertFalse(model.isSubmitting)
+            XCTAssertEqual(model.createdTaskProfileName, "atlas.example")
+            let posts = await transport.posts
+            XCTAssertEqual(posts.count, 1)
+        }
+    }
+
     func testTasksDeepLinkSelectsTasksTab() {
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let state = AppState(
@@ -215,7 +317,7 @@ private actor RoutingTaskTransport: HTTPTransport {
                 description: json?["description"] as? String,
                 target: json?["targetInstanceId"] as? String
             ))
-            if suspendPosts {
+            if suspendPosts && posts.count == 1 {
                 postStarted = true
                 postStartWaiters.forEach { $0.resume() }
                 postStartWaiters.removeAll()

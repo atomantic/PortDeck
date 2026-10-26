@@ -27,6 +27,7 @@
 		34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4483786345517DFB11EE9B4B /* EditInstanceView.swift */; };
 		3469DBA19350C02B39FA4163 /* PortOSInstanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986E5FC9C6C9F4FDAC4504B9 /* PortOSInstanceTests.swift */; };
 		34791959EE25157E367AA2B7 /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B351C0DF26B662D65EFFBB8 /* DemoData.swift */; };
+		34C4DCC1526ACAC08DE7B295 /* ComposerSubmissionOwnership.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5BC679082B3D7AA56827FB9 /* ComposerSubmissionOwnership.swift */; };
 		369B4342F6CE368E0E5CB680 /* DailyLogReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D2CFE90554D9616B0796AB /* DailyLogReminderScheduler.swift */; };
 		3D0905D1727A8793E6308241 /* SyncedInstanceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606689402D0E38A53C08E727 /* SyncedInstanceProfile.swift */; };
 		3E56F67F31B240FCF4F596CC /* AddFederationPeerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EEE6276C0CE74A3AC23C8CD /* AddFederationPeerView.swift */; };
@@ -172,6 +173,7 @@
 		E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E1B27EB5FFEF699BCAB1D6B4 /* ActionArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionArguments.swift; sourceTree = "<group>"; };
 		E4466967E5BD54DEB9A21233 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
+		E5BC679082B3D7AA56827FB9 /* ComposerSubmissionOwnership.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerSubmissionOwnership.swift; sourceTree = "<group>"; };
 		E855A9ADBAD3D7452DAD967B /* AddTailcatInstanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTailcatInstanceView.swift; sourceTree = "<group>"; };
 		E89636D4534E45BF9698331D /* ActionResultDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionResultDisplay.swift; sourceTree = "<group>"; };
 		F6DEB69F83D1B6FC2C5B5DEB /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksView.swift; sourceTree = "<group>"; };
@@ -383,6 +385,7 @@
 			children = (
 				628B2E2D873340C6D0FA2834 /* AppState.swift */,
 				2E7D33609EF87313EC8F6E2C /* CaptureComposerModel.swift */,
+				E5BC679082B3D7AA56827FB9 /* ComposerSubmissionOwnership.swift */,
 				57D2CFE90554D9616B0796AB /* DailyLogReminderScheduler.swift */,
 				6B351C0DF26B662D65EFFBB8 /* DemoData.swift */,
 				34429E825AA3AE3B5901EC9B /* DictationController.swift */,
@@ -571,6 +574,7 @@
 				B2551BED40476718D0708866 /* CaptureComposerModel.swift in Sources */,
 				AC0A78998942D181BC71AFC4 /* CaptureView.swift in Sources */,
 				F781BAE78FB31434158E2C07 /* Color+Brand.swift in Sources */,
+				34C4DCC1526ACAC08DE7B295 /* ComposerSubmissionOwnership.swift in Sources */,
 				369B4342F6CE368E0E5CB680 /* DailyLogReminderScheduler.swift in Sources */,
 				34791959EE25157E367AA2B7 /* DemoData.swift in Sources */,
 				E22BEA5680C61A40EC53F28C /* DictationController.swift in Sources */,
