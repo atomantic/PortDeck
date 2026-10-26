@@ -14,6 +14,7 @@
 		0BCB134D03DB14C14F995E67 /* CaptureComposerModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257B4C2EDB0AE72621B30F07 /* CaptureComposerModelTests.swift */; };
 		13BB1A86E5F4D85512A2D592 /* FleetSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379A4627E3385FE1B3BDE3CB /* FleetSyncCoordinatorTests.swift */; };
 		194E28D3B05B25A731C58633 /* ActionResultDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B002FBB64F5EC7DA4E9A5F /* ActionResultDisplayTests.swift */; };
+		2397E74C6B51CA70CFEFDE9D /* FleetInstanceRemoval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 861B53204F64EE61105440BE /* FleetInstanceRemoval.swift */; };
 		2452C87D2461089ABE6B329C /* ICloudFleetSyncStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26944954F2285FE367F5D371 /* ICloudFleetSyncStoreTests.swift */; };
 		285A90F7A74B59972111F181 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E158AD31FACD5FBA41577456 /* PrivacyInfo.xcprivacy */; };
 		2BEFC0778772CC706798C3BF /* TailcatTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 177CB4AC72B7FA9388E699A6 /* TailcatTransportTests.swift */; };
@@ -146,6 +147,7 @@
 		814A88F3536606FF6A81191C /* KeychainItemClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainItemClient.swift; sourceTree = "<group>"; };
 		8241E58FBED37F4EAFD1A035 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		84973FDFB58BFA803205C64E /* PortDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PortDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		861B53204F64EE61105440BE /* FleetInstanceRemoval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetInstanceRemoval.swift; sourceTree = "<group>"; };
 		8A6767A2C620477ED66C6778 /* TailcatConnectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TailcatConnectionStore.swift; sourceTree = "<group>"; };
 		982175FF5309C8E30EAD19F7 /* PortDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortDeckApp.swift; sourceTree = "<group>"; };
 		986E5FC9C6C9F4FDAC4504B9 /* PortOSInstanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortOSInstanceTests.swift; sourceTree = "<group>"; };
@@ -384,6 +386,7 @@
 				57D2CFE90554D9616B0796AB /* DailyLogReminderScheduler.swift */,
 				6B351C0DF26B662D65EFFBB8 /* DemoData.swift */,
 				34429E825AA3AE3B5901EC9B /* DictationController.swift */,
+				861B53204F64EE61105440BE /* FleetInstanceRemoval.swift */,
 				026532BA9E0C4BE182D063DA /* FleetModelStore.swift */,
 				1A983807C7A402535A0E1074 /* FleetRemovalFixture.swift */,
 				DBBFEA235BACC796156F439A /* FleetSyncCoordinator.swift */,
@@ -572,6 +575,7 @@
 				34791959EE25157E367AA2B7 /* DemoData.swift in Sources */,
 				E22BEA5680C61A40EC53F28C /* DictationController.swift in Sources */,
 				34190D2952D3B64C0DC60440 /* EditInstanceView.swift in Sources */,
+				2397E74C6B51CA70CFEFDE9D /* FleetInstanceRemoval.swift in Sources */,
 				9AD4280E63D6DA23AFA2C6E3 /* FleetModelStore.swift in Sources */,
 				2D705B67817E5D3C0A548BC5 /* FleetRemovalFixture.swift in Sources */,
 				90456A6F3931504957C2A1C5 /* FleetSyncCoordinator.swift in Sources */,
