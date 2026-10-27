@@ -18,14 +18,7 @@ struct ActionsView: View {
 
     private var visibleActions: [PaletteAction] {
         guard let manifestActions = manifest?.actions else { return [] }
-        let actions = manifestActions.filter(\.isAvailableNatively)
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return actions }
-        return actions.filter {
-            $0.label.localizedCaseInsensitiveContains(query) ||
-            $0.section.localizedCaseInsensitiveContains(query) ||
-            $0.description.localizedCaseInsensitiveContains(query)
-        }
+        return PaletteAction.visibleActions(manifestActions, matching: searchText)
     }
 
     private var sections: [(String, [PaletteAction])] {
