@@ -41,7 +41,7 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
           cache-dependency-path: Native/TailcatBridge/go.sum
@@ -94,7 +94,7 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: '1.27.3'
           cache-dependency-path: Native/TailcatBridge/go.sum
